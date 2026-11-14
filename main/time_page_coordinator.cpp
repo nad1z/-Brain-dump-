@@ -38,6 +38,35 @@ int To12Hour(int hour24)
     return hour12 == 0 ? 12 : hour12;
 }
 
+constexpr int kMinYear = 2024;
+constexpr int kMaxYear = 2099;
+// Held-tilt auto-repeats before the step grows.
+constexpr int kRepeatsBeforeFastStep = 4;
+
+bool IsLeapYear(int year)
+{
+    return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+}
+
+int DaysInMonth(int year, int month)
+{
+    static constexpr int kDays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month < 1 || month > 12) {
+        return 31;
+    }
+    if (month == 2 && IsLeapYear(year)) {
+        return 29;
+    }
+    return kDays[month - 1];
+}
+
+// Wraps `value` into [min_value, max_value].
+int WrapInRange(int value, int min_value, int max_value)
+{
+    const int span = max_value - min_value + 1;
+    return ((((value - min_value) % span) + span) % span) + min_value;
+}
+
 }  // namespace
 
 TimePageCoordinator::TimePageCoordinator() = default;
@@ -80,16 +109,159 @@ void TimePageCoordinator::RefreshFromService(
 void TimePageCoordinator::PrepareForShow()
 {
     user_edited_ = false;
+    editing_field_ = NavigationItemRole::kUnknown;
+    editing_original_value_.clear();
     focus_.Configure(navigation_model_.item_count,
                      navigation_model_.IndexOfRole(NavigationItemRole::kTimePageTimezone));
 }
 
-bool TimePageCoordinator::MoveFocus(int delta)
+bool TimePageCoordinator::MoveFocus(int delta, bool repeat)
 {
     if (delta == 0) {
         return false;
     }
+    if (IsEditing()) {
+        repeat_count_ = repeat ? repeat_count_ + 1 : 0;
+        int step = 1;
+        if (repeat_count_ >= kRepeatsBeforeFastStep) {
+            if (editing_field_ == NavigationItemRole::kTimePageMinute) {
+                step = 5;
+            } else if (editing_field_ == NavigationItemRole::kTimePageYear) {
+                step = 10;
+            }
+        }
+        // UP arrives as delta -1 and raises the value.
+        return StepEditingValue(delta < 0 ? step : -step);
+    }
     return focus_.Move(delta);
+}
+
+std::string* TimePageCoordinator::FieldValue(NavigationItemRole field)
+{
+    switch (field) {
+        case NavigationItemRole::kTimePageHour:
+            return &hour_;
+        case NavigationItemRole::kTimePageMinute:
+            return &minute_;
+        case NavigationItemRole::kTimePageMonth:
+            return &month_;
+        case NavigationItemRole::kTimePageDay:
+            return &day_;
+        case NavigationItemRole::kTimePageYear:
+            return &year_;
+        default:
+            return nullptr;
+    }
+}
+
+bool TimePageCoordinator::BeginEdit(NavigationItemRole field)
+{
+    std::string* value = FieldValue(field);
+    if (value == nullptr) {
+        return false;
+    }
+    editing_field_ = field;
+    editing_original_value_ = *value;
+    repeat_count_ = 0;
+    return true;
+}
+
+bool TimePageCoordinator::CommitEdit()
+{
+    if (!IsEditing()) {
+        return false;
+    }
+    const std::string* value = FieldValue(editing_field_);
+    if (value != nullptr && *value != editing_original_value_) {
+        user_edited_ = true;
+    }
+    editing_field_ = NavigationItemRole::kUnknown;
+    editing_original_value_.clear();
+    ClampDayToMonth();
+    return true;
+}
+
+bool TimePageCoordinator::CancelEdit()
+{
+    if (!IsEditing()) {
+        return false;
+    }
+    std::string* value = FieldValue(editing_field_);
+    if (value != nullptr) {
+        *value = editing_original_value_;
+    }
+    editing_field_ = NavigationItemRole::kUnknown;
+    editing_original_value_.clear();
+    return true;
+}
+
+void TimePageCoordinator::ClampDayToMonth()
+{
+    const int max_day = DaysInMonth(std::atoi(year_.c_str()), std::atoi(month_.c_str()));
+    if (std::atoi(day_.c_str()) > max_day) {
+        day_ = Pad2(max_day);
+        user_edited_ = true;
+    }
+}
+
+bool TimePageCoordinator::StepEditingValue(int amount)
+{
+    std::string* value = FieldValue(editing_field_);
+    if (value == nullptr || amount == 0) {
+        return false;
+    }
+    int min_value = 0;
+    int max_value = 0;
+    int current = std::atoi(value->c_str());
+    switch (editing_field_) {
+        case NavigationItemRole::kTimePageHour:
+            min_value = use_24_hour_ ? 0 : 1;
+            max_value = use_24_hour_ ? 23 : 12;
+            break;
+        case NavigationItemRole::kTimePageMinute:
+            max_value = 59;
+            break;
+        case NavigationItemRole::kTimePageMonth:
+            min_value = 1;
+            max_value = 12;
+            break;
+        case NavigationItemRole::kTimePageDay:
+            min_value = 1;
+            max_value = DaysInMonth(std::atoi(year_.c_str()), std::atoi(month_.c_str()));
+            break;
+        case NavigationItemRole::kTimePageYear:
+            min_value = kMinYear;
+            max_value = kMaxYear;
+            break;
+        default:
+            return false;
+    }
+
+    int next = 0;
+    if (value->empty() || current < min_value || current > max_value) {
+        // Empty or out-of-range (e.g. no clock yet): start from the bottom of the range.
+        next = min_value;
+    } else if (amount == 1 || amount == -1) {
+        next = current + amount;
+    } else {
+        // Large steps snap to a multiple of the step, so minutes land on :05, :10 ...
+        const int step = amount > 0 ? amount : -amount;
+        if (amount > 0) {
+            next = ((current / step) + 1) * step;
+        } else {
+            next = (current % step) != 0 ? current - (current % step) : current - step;
+        }
+    }
+    next = WrapInRange(next, min_value, max_value);
+
+    char buffer[8] = {};
+    std::snprintf(buffer, sizeof(buffer),
+                  editing_field_ == NavigationItemRole::kTimePageYear ? "%04d" : "%02d", next);
+    if (*value == buffer) {
+        return false;
+    }
+    *value = buffer;
+    return true;
 }
 
 bool TimePageCoordinator::SetFocusIndex(int index)
@@ -224,11 +396,15 @@ epaper_ui::TimePageState TimePageCoordinator::BuildState() const
     state.hour.suffix_text = "HR";
     state.hour.max_length = 2;
     state.hour.focused = IsRoleFocused(NavigationItemRole::kTimePageHour);
+    state.hour.active = editing_field_ == NavigationItemRole::kTimePageHour;
+    state.hour.show_cursor = false;
 
     state.minute.value_text = minute_;
     state.minute.suffix_text = "MIN";
     state.minute.max_length = 2;
     state.minute.focused = IsRoleFocused(NavigationItemRole::kTimePageMinute);
+    state.minute.active = editing_field_ == NavigationItemRole::kTimePageMinute;
+    state.minute.show_cursor = false;
 
     state.meridiem.label_text = use_24_hour_ ? "24H" : (meridiem_pm_ ? "PM" : "AM");
     state.meridiem.selected = IsRoleFocused(NavigationItemRole::kTimePageMeridiem);
@@ -237,16 +413,22 @@ epaper_ui::TimePageState TimePageCoordinator::BuildState() const
     state.month.placeholder_text = "MM";
     state.month.max_length = 2;
     state.month.focused = IsRoleFocused(NavigationItemRole::kTimePageMonth);
+    state.month.active = editing_field_ == NavigationItemRole::kTimePageMonth;
+    state.month.show_cursor = false;
 
     state.day.value_text = day_;
     state.day.placeholder_text = "DD";
     state.day.max_length = 2;
     state.day.focused = IsRoleFocused(NavigationItemRole::kTimePageDay);
+    state.day.active = editing_field_ == NavigationItemRole::kTimePageDay;
+    state.day.show_cursor = false;
 
     state.year.value_text = year_;
     state.year.placeholder_text = "YYYY";
     state.year.max_length = 4;
     state.year.focused = IsRoleFocused(NavigationItemRole::kTimePageYear);
+    state.year.active = editing_field_ == NavigationItemRole::kTimePageYear;
+    state.year.show_cursor = false;
 
     state.save.label_text = "Sync & Save";
     state.save.selected = IsRoleFocused(NavigationItemRole::kTimePageSave);

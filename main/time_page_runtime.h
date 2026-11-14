@@ -16,7 +16,7 @@ esp_err_t UpdateDisplayStateAndRequestRefresh(
     display_service::RefreshMode refresh_mode = display_service::RefreshMode::kPartial);
 esp_err_t UpdateDisplayStateAndRequestRefresh(
     const display_service::RefreshRequest& refresh_request);
-page_actions::FocusMoveOutcome MoveFocus(int delta);
+page_actions::FocusMoveOutcome MoveFocus(int delta, bool repeat = false);
 time_page_interactions::ActivateResult ActivateFocusedItem();
 
 footer_runtime::ProjectionState BuildFooterProjectionState();
@@ -28,7 +28,11 @@ esp_err_t SyncFromService(bool request_refresh_if_active);
 void ToggleMeridiem();
 esp_err_t Save();
 esp_err_t ShowTimezoneModal();
-esp_err_t ShowFieldKeyboard(page_navigation::NavigationItemRole field);
+// Starts changing a numeric field with the rocker (see TimePageCoordinator::BeginEdit).
+esp_err_t BeginFieldEdit(page_navigation::NavigationItemRole field);
+// Back gesture: cancels a field edit in progress, restoring its old value. Returns false when
+// nothing was being edited, so the gesture falls through to its normal meaning.
+bool ExitActiveControl();
 
 // Routes a select-modal submission to the timezone field when the timezone modal is the
 // one currently open. Returns true if it consumed the submission. Cleared by

@@ -132,10 +132,10 @@ void ApplyPrimaryActivateResult(const ActivateResult& result, const ActivateCall
     }
 }
 
-FocusMoveResult HandleMoveFocus(TimePageCoordinator& coordinator, int delta)
+FocusMoveResult HandleMoveFocus(TimePageCoordinator& coordinator, int delta, bool repeat)
 {
     FocusMoveResult result = {};
-    if (!coordinator.MoveFocus(delta)) {
+    if (!coordinator.MoveFocus(delta, repeat)) {
         return result;
     }
     result.handled = true;

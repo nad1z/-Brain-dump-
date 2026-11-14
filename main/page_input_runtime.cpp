@@ -884,23 +884,23 @@ ButtonResult ApplyTimeActivateResult(const time_page_interactions::ActivateResul
         (void)time_page_runtime::ShowTimezoneModal();
     };
     callbacks.edit_hour = []() {
-        (void)time_page_runtime::ShowFieldKeyboard(
+        (void)time_page_runtime::BeginFieldEdit(
             page_navigation::NavigationItemRole::kTimePageHour);
     };
     callbacks.edit_minute = []() {
-        (void)time_page_runtime::ShowFieldKeyboard(
+        (void)time_page_runtime::BeginFieldEdit(
             page_navigation::NavigationItemRole::kTimePageMinute);
     };
     callbacks.edit_month = []() {
-        (void)time_page_runtime::ShowFieldKeyboard(
+        (void)time_page_runtime::BeginFieldEdit(
             page_navigation::NavigationItemRole::kTimePageMonth);
     };
     callbacks.edit_day = []() {
-        (void)time_page_runtime::ShowFieldKeyboard(
+        (void)time_page_runtime::BeginFieldEdit(
             page_navigation::NavigationItemRole::kTimePageDay);
     };
     callbacks.edit_year = []() {
-        (void)time_page_runtime::ShowFieldKeyboard(
+        (void)time_page_runtime::BeginFieldEdit(
             page_navigation::NavigationItemRole::kTimePageYear);
     };
     callbacks.toggle_meridiem = []() {
@@ -2218,6 +2218,16 @@ ButtonResult HandleWifiButtonEvent(const button_service::ButtonEventInfo& event)
 ButtonResult HandleTimeButtonEvent(const button_service::ButtonEventInfo& event)
 {
     ButtonResult result = {};
+
+    // App-wide gesture: a quick ACTION tap cancels a field being changed with the rocker.
+    if (button_service::IsBackGesture(event)) {
+        if (time_page_runtime::ExitActiveControl()) {
+            result.handled = true;
+            result.interaction_result = MakeConsumedResult(true);
+        }
+        return result;
+    }
+
     if (!button_service::IsSelectButton(event.button)) {
         return result;
     }
@@ -2387,7 +2397,7 @@ FocusMoveResult MoveFocusForCurrentScreen(int delta, bool page_jump)
         case display_service::ScreenId::kWifi:
             return ApplyWifiMoveResult(wifi_page_runtime::MoveFocus(delta, page_jump));
         case display_service::ScreenId::kTime:
-            return ApplyTimeMoveResult(time_page_runtime::MoveFocus(delta));
+            return ApplyTimeMoveResult(time_page_runtime::MoveFocus(delta, page_jump));
         case display_service::ScreenId::kHome:
             return ApplyDashboardMoveResult(dashboard_page_runtime::MoveFocus(delta));
         case display_service::ScreenId::kTopicsBrowse:

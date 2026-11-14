@@ -51,7 +51,7 @@ struct ActivateCallbacks {
 
 ActivateResult HandlePrimaryActivate(TimePageCoordinator& coordinator);
 void ApplyPrimaryActivateResult(const ActivateResult& result, const ActivateCallbacks& callbacks);
-FocusMoveResult HandleMoveFocus(TimePageCoordinator& coordinator, int delta);
+FocusMoveResult HandleMoveFocus(TimePageCoordinator& coordinator, int delta, bool repeat = false);
 
 }  // namespace time_page_interactions
 

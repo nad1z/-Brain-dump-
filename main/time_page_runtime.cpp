@@ -20,48 +20,7 @@ constexpr const char* kTag = "TimePageRuntime";
 std::mutex s_mutex;
 TimePageCoordinator s_coordinator = {};
 int32_t s_interaction_generation = 1;
-page_navigation::NavigationItemRole s_editing_field = page_navigation::NavigationItemRole::kUnknown;
 bool s_timezone_modal_active = false;
-
-void CommitFieldValueLocked(page_navigation::NavigationItemRole field, const std::string& value)
-{
-    switch (field) {
-        case page_navigation::NavigationItemRole::kTimePageHour:
-            s_coordinator.SetHour(value);
-            break;
-        case page_navigation::NavigationItemRole::kTimePageMinute:
-            s_coordinator.SetMinute(value);
-            break;
-        case page_navigation::NavigationItemRole::kTimePageMonth:
-            s_coordinator.SetMonth(value);
-            break;
-        case page_navigation::NavigationItemRole::kTimePageDay:
-            s_coordinator.SetDay(value);
-            break;
-        case page_navigation::NavigationItemRole::kTimePageYear:
-            s_coordinator.SetYear(value);
-            break;
-        default:
-            break;
-    }
-}
-
-// Commits the typed value to the active field on submit. Like the WiFi keyboard, the page
-// is only re-rendered when the keyboard closes — the keyboard's own input preview shows
-// each keystroke, so there is no per-key full-page refresh.
-void TimeKeyboardChanged(const epaper_ui::KeyboardState& keyboard_state,
-                         epaper_ui::KeyboardIntent intent, void*)
-{
-    if (intent == epaper_ui::KeyboardIntent::kSubmit) {
-        std::lock_guard<std::mutex> lock(s_mutex);
-        CommitFieldValueLocked(s_editing_field, keyboard_state.input.value_text);
-    }
-    if (intent == epaper_ui::KeyboardIntent::kSubmit ||
-        intent == epaper_ui::KeyboardIntent::kDismiss) {
-        (void)overlay_runtime::DismissKeyboard();
-        (void)UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
-    }
-}
 
 void AdvanceInteractionGenerationLocked()
 {
@@ -165,7 +124,7 @@ esp_err_t UpdateDisplayStateAndRequestRefresh(
                                         &UpdateDisplayState, refresh_request);
 }
 
-page_actions::FocusMoveOutcome MoveFocus(int delta)
+page_actions::FocusMoveOutcome MoveFocus(int delta, bool repeat)
 {
     page_actions::FocusMoveOutcome result = {};
     int old_focus_index = -1;
@@ -173,7 +132,7 @@ page_actions::FocusMoveOutcome MoveFocus(int delta)
     {
         std::lock_guard<std::mutex> lock(s_mutex);
         old_focus_index = s_coordinator.focus().index();
-        result = time_page_interactions::HandleMoveFocus(s_coordinator, delta);
+        result = time_page_interactions::HandleMoveFocus(s_coordinator, delta, repeat);
         if (!result.handled) {
             return result;
         }
@@ -186,8 +145,20 @@ page_actions::FocusMoveOutcome MoveFocus(int delta)
 
 time_page_interactions::ActivateResult ActivateFocusedItem()
 {
-    std::lock_guard<std::mutex> lock(s_mutex);
-    return time_page_interactions::HandlePrimaryActivate(s_coordinator);
+    time_page_interactions::ActivateResult result = {};
+    bool committed = false;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        // Select while a field is being changed keeps the new value and leaves edit mode.
+        committed = s_coordinator.CommitEdit();
+        if (!committed) {
+            return time_page_interactions::HandlePrimaryActivate(s_coordinator);
+        }
+    }
+    (void)UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
+    result.handled = true;
+    result.play_activate_cue = true;
+    return result;
 }
 
 footer_runtime::ProjectionState BuildFooterProjectionState()
@@ -307,52 +278,30 @@ esp_err_t ShowTimezoneModal()
     return overlay_runtime::ShowSelectModal(state);
 }
 
-esp_err_t ShowFieldKeyboard(page_navigation::NavigationItemRole field)
+esp_err_t BeginFieldEdit(page_navigation::NavigationItemRole field)
 {
-    epaper_ui::KeyboardState keyboard_state = {};
+    bool began = false;
     {
         std::lock_guard<std::mutex> lock(s_mutex);
-        std::string value = {};
-        size_t max_length = 2;
-        switch (field) {
-            case page_navigation::NavigationItemRole::kTimePageHour:
-                value = s_coordinator.hour();
-                max_length = 2;
-                break;
-            case page_navigation::NavigationItemRole::kTimePageMinute:
-                value = s_coordinator.minute();
-                max_length = 2;
-                break;
-            case page_navigation::NavigationItemRole::kTimePageMonth:
-                value = s_coordinator.month();
-                max_length = 2;
-                break;
-            case page_navigation::NavigationItemRole::kTimePageDay:
-                value = s_coordinator.day();
-                max_length = 2;
-                break;
-            case page_navigation::NavigationItemRole::kTimePageYear:
-                value = s_coordinator.year();
-                max_length = 4;
-                break;
-            default:
-                return ESP_OK;
-        }
-        s_editing_field = field;
-        keyboard_state.visible = true;
-        keyboard_state.input.value_text = value;
-        keyboard_state.input.max_length = max_length;
-        keyboard_state.input.focused = true;
-        keyboard_state.input.active = true;
-        keyboard_state.input.password_mode = false;
-        keyboard_state.input.cursor_index = -1;
-        keyboard_state.input.submit_style = epaper_ui::KeyboardInputSubmitStyle::kDone;
-        // Time/date fields are numeric-only.
-        keyboard_state.layout = epaper_ui::KeyboardLayoutKind::kNumbers;
-        keyboard_state.selected_key_index = 0;
-        keyboard_state.shift_locked = false;
+        began = s_coordinator.BeginEdit(field);
     }
-    return overlay_runtime::ShowKeyboard(keyboard_state, &TimeKeyboardChanged, nullptr);
+    if (!began) {
+        return ESP_OK;
+    }
+    return UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
+}
+
+bool ExitActiveControl()
+{
+    bool cancelled = false;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        cancelled = s_coordinator.CancelEdit();
+    }
+    if (cancelled) {
+        (void)UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
+    }
+    return cancelled;
 }
 
 bool HandleSelectModalSubmit(int selected_index)

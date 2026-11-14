@@ -324,6 +324,15 @@ fields provided (hour, minute, AM/PM, month, day, year). Press **Sync &
 Save** when you're done — it both saves what you entered and re-syncs the
 clock.
 
+**Changing a number.** Move to the hour, minute, month, day or year and
+press the rocker in. The field turns black with small arrows above and
+below the number: tilt the rocker up to raise it and down to lower it (it
+wraps around — past 59 minutes comes 00). Hold a tilt to keep going; after a
+moment minutes jump in fives and years in tens. Press the rocker in again
+to keep the number, or tap the Record button to put back the number you
+started with. The day never goes past the end of the month you picked, so
+choosing February turns a 31st into the 28th (or 29th).
+
 **12-hour or 24-hour clock.** The button next to the minutes cycles through
 **AM**, **PM** and **24H** each time you select it. Choose **24H** and press
 **Sync & Save** to show every time on the device — the status bar clock and

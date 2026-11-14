@@ -8,6 +8,16 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-14
+
+### Changed
+
+- **Number pickers on the Time page.** The hour, minute, month, day and
+  year fields no longer open the on-screen keyboard. Press the rocker in on
+  a field and tilt up or down to change the number; hold the tilt to go
+  faster (minutes in fives, years in tens). Press in again to keep it, or
+  tap Record to undo. Days are kept within the chosen month.
+
 ## [1.4.1] - 2026-11-14
 
 ### Fixed
