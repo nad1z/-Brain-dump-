@@ -321,7 +321,8 @@ personal credentials afterward, and no risk of a release accidentally shipping t
 - Don't hand-edit generated files: `components/project_assets/generated_*`,
   `components/epaper_ui/generated_epaper_fonts.*`,
   `components/epaper_ui/generated_epaper_hebrew_fonts.*`
-  (`scripts/generate_epaper_hebrew_fonts.py`), and
+  (`scripts/generate_epaper_hebrew_fonts.py`),
+  `components/timezone_service/generated_timezones.h` (`node scripts/generate_timezones.mjs`), and
   `components/wifi_service/portal/*` (regenerate via the scripts/build steps
   above instead).
 - `GPIO0` (`ACTION`/BOOT button) is the boot/download strap pin and must read

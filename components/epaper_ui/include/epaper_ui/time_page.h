@@ -31,6 +31,9 @@ struct TimePageState {
     std::string title_text = "Time setting";
     std::string manual_heading_text = "Set manual time";
     SelectInputState timezone = {};
+    // One or two short lines under the timezone saying where the clock's time came from and
+    // whether Wi-Fi will replace a typed time, e.g. "Synced over Wi-Fi at 20:22. ..."
+    std::string clock_status_text = {};
     TimeInputState hour = {};
     TimeInputState minute = {};
     ButtonState meridiem = {};

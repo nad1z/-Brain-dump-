@@ -336,10 +336,33 @@ From the top:
 
 ### Time
 
-Set your timezone from a picker, or enter the date and time by hand in the
-fields provided (hour, minute, AM/PM, month, day, year). Press **Sync &
-Save** when you're done — it both saves what you entered and re-syncs the
-clock.
+**Timezone.** Select the Timezone field and pick in two steps: first your
+region (Africa, America, Asia, Europe, ...), then your city. Every place in
+the world is listed, each with its offset from UTC — for example
+**Jerusalem (UTC+2/+3)**, where the second number is the summer-time offset.
+Brain Dump switches between summer and winter time on its own. **UTC** is
+at the top of the region list and needs no second step. Press **Sync &
+Save** to apply your choice.
+
+The setup web page (see [Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)) offers the
+same list, and if your phone's timezone is in it, a **Use it** button picks
+it for you.
+
+**Where the time comes from.** Under the timezone, a short line tells you
+how the clock was set:
+
+- **Set over Wi-Fi at 20:22** — the time came from the internet. While
+  Brain Dump has Wi-Fi it keeps the time right by itself, and a time you
+  type below is replaced at the next sync. If the clock looks wrong, the
+  timezone is what needs changing, not the time.
+- **Set by hand** — you entered it; it will be corrected the next time
+  Brain Dump connects to Wi-Fi.
+- **Clock not set** — pick your timezone and connect Wi-Fi, or enter the
+  time below.
+
+You can also enter the date and time by hand in the fields provided (hour,
+minute, AM/PM, month, day, year). Press **Sync & Save** when you're done —
+it both saves what you entered and re-syncs the clock.
 
 **Changing a number.** Move to the hour, minute, month, day or year and
 press the rocker in. The field turns black with small arrows above and

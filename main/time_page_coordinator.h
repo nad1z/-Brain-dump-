@@ -30,6 +30,8 @@ public:
     page_navigation::NavigationItemRole FocusedRole() const;
 
     epaper_ui::TimePageState BuildState() const;
+    // The line under the timezone: where the current time came from and what Wi-Fi will do.
+    std::string ClockStatusText() const;
 
     // Field accessors used to seed overlays and build the save patch.
     const std::vector<timezone_service::TimezoneInfo>& timezones() const { return timezones_; }
@@ -86,6 +88,7 @@ private:
     std::string minute_ = {};  // "00".."59"
     bool meridiem_pm_ = false;
     bool use_24_hour_ = false;
+    timezone_service::RuntimeSnapshot runtime_ = {};
     std::string month_ = {};   // "01".."12"
     std::string day_ = {};     // "01".."31"
     std::string year_ = {};    // "YYYY"

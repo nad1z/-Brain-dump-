@@ -1,5 +1,9 @@
 #include "time_page_runtime.h"
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #include <climits>
 #include <mutex>
 
@@ -20,7 +24,12 @@ constexpr const char* kTag = "TimePageRuntime";
 std::mutex s_mutex;
 TimePageCoordinator s_coordinator = {};
 int32_t s_interaction_generation = 1;
-bool s_timezone_modal_active = false;
+// The timezone picker is two select modals in a row: regions, then the cities in the chosen
+// region. s_timezone_city_indexes maps the city modal's rows back to coordinator indexes.
+enum class TimezonePickerStage : uint8_t { kNone, kRegion, kCity };
+TimezonePickerStage s_timezone_picker_stage = TimezonePickerStage::kNone;
+std::vector<std::string> s_timezone_regions;
+std::vector<int> s_timezone_city_indexes;
 
 void AdvanceInteractionGenerationLocked()
 {
@@ -259,21 +268,75 @@ esp_err_t Save()
     return result.success ? ESP_OK : ESP_FAIL;
 }
 
+namespace {
+
+// Regions in the order the zone list has them ("UTC" first, then alphabetical).
+std::vector<std::string> BuildRegionsLocked()
+{
+    std::vector<std::string> regions;
+    for (const timezone_service::TimezoneInfo& tz : s_coordinator.timezones()) {
+        if (std::find(regions.begin(), regions.end(), tz.region) == regions.end()) {
+            regions.push_back(tz.region);
+        }
+    }
+    return regions;
+}
+
+std::string SelectedRegionLocked()
+{
+    const int selected = s_coordinator.SelectedTimezoneIndex();
+    if (selected < 0) {
+        return {};
+    }
+    return s_coordinator.timezones()[static_cast<size_t>(selected)].region;
+}
+
+epaper_ui::SelectModalState BuildCityModalLocked(const std::string& region)
+{
+    epaper_ui::SelectModalState state = {};
+    state.visible = true;
+    state.title_text = region;
+    s_timezone_city_indexes.clear();
+    const int current = s_coordinator.SelectedTimezoneIndex();
+    const std::vector<timezone_service::TimezoneInfo>& timezones = s_coordinator.timezones();
+    for (size_t index = 0; index < timezones.size(); ++index) {
+        if (timezones[index].region != region) {
+            continue;
+        }
+        if (static_cast<int>(index) == current) {
+            state.selected_index = static_cast<int>(s_timezone_city_indexes.size());
+        }
+        s_timezone_city_indexes.push_back(static_cast<int>(index));
+        state.items.push_back({.label_text = timezones[index].description.empty()
+                                                 ? timezones[index].name
+                                                 : timezones[index].description});
+    }
+    return state;
+}
+
+}  // namespace
+
 esp_err_t ShowTimezoneModal()
 {
     epaper_ui::SelectModalState state = {};
     {
         std::lock_guard<std::mutex> lock(s_mutex);
-        state.visible = true;
-        state.title_text = "Select timezone";
-        const int selected = s_coordinator.SelectedTimezoneIndex();
-        state.selected_index = selected < 0 ? 0 : selected;
-        for (const timezone_service::TimezoneInfo& tz : s_coordinator.timezones()) {
-            state.items.push_back({
-                .label_text = tz.description.empty() ? tz.name : tz.description,
-            });
+        s_timezone_regions = BuildRegionsLocked();
+        if (s_timezone_regions.empty()) {
+            return ESP_OK;
         }
-        s_timezone_modal_active = true;
+        state.visible = true;
+        state.title_text = "Select region";
+        const std::string current_region = SelectedRegionLocked();
+        for (size_t index = 0; index < s_timezone_regions.size(); ++index) {
+            const std::string& region = s_timezone_regions[index];
+            if (region == current_region) {
+                state.selected_index = static_cast<int>(index);
+            }
+            state.items.push_back(
+                {.label_text = region == "UTC" ? std::string("UTC (no daylight saving)") : region});
+        }
+        s_timezone_picker_stage = TimezonePickerStage::kRegion;
     }
     return overlay_runtime::ShowSelectModal(state);
 }
@@ -306,25 +369,48 @@ bool ExitActiveControl()
 
 bool HandleSelectModalSubmit(int selected_index)
 {
-    bool was_active = false;
+    TimezonePickerStage stage = TimezonePickerStage::kNone;
+    epaper_ui::SelectModalState city_modal = {};
     {
         std::lock_guard<std::mutex> lock(s_mutex);
-        was_active = s_timezone_modal_active;
-        s_timezone_modal_active = false;
-        if (was_active) {
-            s_coordinator.SetTimezoneByIndex(selected_index);
+        stage = s_timezone_picker_stage;
+        s_timezone_picker_stage = TimezonePickerStage::kNone;
+        if (stage == TimezonePickerStage::kRegion) {
+            if (selected_index < 0 ||
+                selected_index >= static_cast<int>(s_timezone_regions.size())) {
+                return true;
+            }
+            city_modal = BuildCityModalLocked(s_timezone_regions[static_cast<size_t>(selected_index)]);
+            if (s_timezone_city_indexes.size() == 1) {
+                // A region with a single entry (UTC) needs no second step.
+                s_coordinator.SetTimezoneByIndex(s_timezone_city_indexes.front());
+                stage = TimezonePickerStage::kCity;
+            } else {
+                s_timezone_picker_stage = TimezonePickerStage::kCity;
+            }
+        } else if (stage == TimezonePickerStage::kCity) {
+            if (selected_index >= 0 &&
+                selected_index < static_cast<int>(s_timezone_city_indexes.size())) {
+                s_coordinator.SetTimezoneByIndex(
+                    s_timezone_city_indexes[static_cast<size_t>(selected_index)]);
+            }
         }
     }
-    if (was_active) {
-        (void)UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
+    if (stage == TimezonePickerStage::kNone) {
+        return false;
     }
-    return was_active;
+    if (s_timezone_picker_stage == TimezonePickerStage::kCity) {
+        (void)overlay_runtime::ShowSelectModal(city_modal);
+        return true;
+    }
+    (void)UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode::kPartial);
+    return true;
 }
 
 void ClearPendingSelectModal()
 {
     std::lock_guard<std::mutex> lock(s_mutex);
-    s_timezone_modal_active = false;
+    s_timezone_picker_stage = TimezonePickerStage::kNone;
 }
 
 }  // namespace time_page_runtime

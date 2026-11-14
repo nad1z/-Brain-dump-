@@ -1,6 +1,8 @@
 #include "epaper_ui/time_page.h"
 
 #include <algorithm>
+#include <string>
+#include <vector>
 
 #include "render_utils.h"
 
@@ -16,9 +18,14 @@ constexpr int kSectionGap = design::spacing::k16;
 constexpr int kSectionBlockGap = design::spacing::k24;
 constexpr int kColumnGap = design::spacing::k12;
 constexpr int kManualHeadingGap = design::spacing::k16;
+constexpr auto kStatusRole = design::TypographyRole::kLabelSmall;
+constexpr int kStatusGap = design::spacing::k8;
+constexpr int kStatusLineGap = design::spacing::k2;
 
 struct Layout {
     UiRect timezone = {};
+    int status_y = 0;
+    std::vector<std::string> status_lines = {};
     int manual_heading_y = 0;
     UiRect hour = {};
     UiRect minute = {};
@@ -81,7 +88,14 @@ Layout BuildLayout(int portrait_width, int portrait_height, const TimePageState&
 
     Layout layout = {};
     layout.timezone = SelectInputBounds(page_x, y, state.timezone, FieldStyle(page_width));
-    y = layout.timezone.bottom() + kSectionBlockGap;
+    y = layout.timezone.bottom();
+    if (!state.clock_status_text.empty()) {
+        layout.status_y = y + kStatusGap;
+        layout.status_lines = WrapTextToWidth(kStatusRole, state.clock_status_text, page_width);
+        y = layout.status_y +
+            static_cast<int>(layout.status_lines.size()) * (LineHeight(kStatusRole) + kStatusLineGap);
+    }
+    y += kSectionBlockGap;
 
     layout.manual_heading_y = y;
     y = layout.manual_heading_y + LineHeight(kManualHeadingRole) + kManualHeadingGap;
@@ -231,6 +245,13 @@ void DrawTimePage(uint8_t* framebuffer,
     DrawSelectInput(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
                     layout.timezone.x, layout.timezone.y, state.timezone,
                     FieldStyle(layout.timezone.width));
+
+    int status_y = layout.status_y;
+    for (const std::string& line : layout.status_lines) {
+        DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+                           kSideInset, status_y, line, kStatusRole, design::color::kTextPrimary);
+        status_y += LineHeight(kStatusRole) + kStatusLineGap;
+    }
 
     DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
                        kSideInset, layout.manual_heading_y, state.manual_heading_text,

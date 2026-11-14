@@ -1,5 +1,7 @@
 #include "timezone_service.h"
 
+#include "generated_timezones.h"
+
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -47,86 +49,8 @@ constexpr const char* kPortalApiSettingsTimeUri = "/api/settings/time";
 constexpr const char* kPortalApiRuntimeTimeUri = "/api/runtime/time";
 constexpr const char* kPortalApiTimezoneListUri = "/api/timezone/list";
 
-struct TimezoneCatalogEntry {
-    const char* name;
-    const char* tz_string;
-    const char* description;
-};
-
-struct TimezoneAliasEntry {
-    const char* alias;
-    const char* canonical;
-};
-
 struct SyncRequest {
     bool force = false;
-};
-
-constexpr TimezoneCatalogEntry kTimezones[] = {
-    {"North_America_Eastern", "EST5EDT,M3.2.0,M11.1.0", "Eastern Time"},
-    {"North_America_Central", "CST6CDT,M3.2.0,M11.1.0", "Central Time"},
-    {"North_America_Mountain", "MST7MDT,M3.2.0,M11.1.0", "Mountain Time"},
-    {"North_America_Pacific", "PST8PDT,M3.2.0,M11.1.0", "Pacific Time"},
-    {"North_America_Alaska", "AKST9AKDT,M3.2.0,M11.1.0", "Alaska Time"},
-    {"North_America_Hawaii", "HST10", "Hawaii Time"},
-    {"UTC", "UTC0", "UTC"},
-    {"UK", "GMT0BST,M3.5.0,M10.5.0", "United Kingdom"},
-    {"Central_Europe", "CET-1CEST,M3.5.0,M10.5.0", "Central Europe"},
-    {"Eastern_Europe", "EET-2EEST,M3.5.0,M10.5.0", "Eastern Europe"},
-    {"Israel", "IST-2IDT,M3.4.4/26,M10.5.0", "Israel"},
-    {"Japan", "JST-9", "Japan"},
-    {"China", "CST-8", "China"},
-    {"Australia_Eastern", "AEST-10AEDT,M10.1.0,M4.1.0", "Australia Eastern"},
-    {"Australia_Central", "ACST-9:30ACDT,M10.1.0,M4.1.0", "Australia Central"},
-    {"Australia_Western", "AWST-8", "Australia Western"},
-};
-
-constexpr TimezoneAliasEntry kTimezoneAliases[] = {
-    {"America/New_York", "North_America_Eastern"},
-    {"America/Detroit", "North_America_Eastern"},
-    {"America/Toronto", "North_America_Eastern"},
-    {"US/Eastern", "North_America_Eastern"},
-    {"EST5EDT", "North_America_Eastern"},
-    {"America/Chicago", "North_America_Central"},
-    {"America/Winnipeg", "North_America_Central"},
-    {"US/Central", "North_America_Central"},
-    {"CST6CDT", "North_America_Central"},
-    {"America/Denver", "North_America_Mountain"},
-    {"America/Edmonton", "North_America_Mountain"},
-    {"US/Mountain", "North_America_Mountain"},
-    {"MST7MDT", "North_America_Mountain"},
-    {"America/Los_Angeles", "North_America_Pacific"},
-    {"America/Vancouver", "North_America_Pacific"},
-    {"US/Pacific", "North_America_Pacific"},
-    {"PST8PDT", "North_America_Pacific"},
-    {"America/Anchorage", "North_America_Alaska"},
-    {"US/Alaska", "North_America_Alaska"},
-    {"AKST9AKDT", "North_America_Alaska"},
-    {"Pacific/Honolulu", "North_America_Hawaii"},
-    {"US/Hawaii", "North_America_Hawaii"},
-    {"HST10", "North_America_Hawaii"},
-    {"UTC", "UTC"},
-    {"Etc/UTC", "UTC"},
-    {"Etc/GMT", "UTC"},
-    {"Europe/London", "UK"},
-    {"Europe/Berlin", "Central_Europe"},
-    {"Europe/Paris", "Central_Europe"},
-    {"Europe/Warsaw", "Central_Europe"},
-    {"Europe/Athens", "Eastern_Europe"},
-    {"Europe/Bucharest", "Eastern_Europe"},
-    {"Europe/Moscow", "Eastern_Europe"},
-    {"Asia/Jerusalem", "Israel"},
-    {"Asia/Tel_Aviv", "Israel"},
-    {"Asia/Tokyo", "Japan"},
-    {"Asia/Shanghai", "China"},
-    {"Asia/Hong_Kong", "China"},
-    {"Asia/Singapore", "China"},
-    {"Australia/Sydney", "Australia_Eastern"},
-    {"Australia/Melbourne", "Australia_Eastern"},
-    {"Australia/Brisbane", "Australia_Eastern"},
-    {"Australia/Adelaide", "Australia_Central"},
-    {"Australia/Darwin", "Australia_Central"},
-    {"Australia/Perth", "Australia_Western"},
 };
 
 std::mutex s_mutex;
@@ -180,27 +104,29 @@ std::string FormatLocalTime(time_t epoch_seconds)
     return buffer;
 }
 
+using generated::ZoneEntry;
+
 const char* ResolveTimezoneAlias(const char* timezone_name)
 {
     if (timezone_name == nullptr) {
         return nullptr;
     }
-    for (const auto& alias : kTimezoneAliases) {
+    for (const auto& alias : generated::kAliases) {
         if (std::strcmp(alias.alias, timezone_name) == 0) {
-            return alias.canonical;
+            return alias.name;
         }
     }
     return timezone_name;
 }
 
-const TimezoneCatalogEntry* FindTimezoneByName(const char* timezone_name)
+const ZoneEntry* FindTimezoneByName(const char* timezone_name)
 {
     if (timezone_name == nullptr || timezone_name[0] == '\0') {
         return nullptr;
     }
 
     const char* resolved_name = ResolveTimezoneAlias(timezone_name);
-    for (const auto& timezone : kTimezones) {
+    for (const auto& timezone : generated::kZones) {
         if (std::strcmp(timezone.name, resolved_name) == 0) {
             return &timezone;
         }
@@ -208,9 +134,18 @@ const TimezoneCatalogEntry* FindTimezoneByName(const char* timezone_name)
     return nullptr;
 }
 
-const char* PickDefaultNtpServer(const char* timezone_tz)
+// The catalog name a stored or requested name means: "Israel" or "Asia/Tel_Aviv" become
+// "Asia/Jerusalem", so the picker can find the selection. Unknown names are returned as-is.
+std::string CanonicalTimezoneName(const std::string& timezone_name)
 {
-    if (timezone_tz != nullptr && std::strstr(timezone_tz, "CST-8") != nullptr) {
+    const ZoneEntry* zone = FindTimezoneByName(timezone_name.c_str());
+    return zone != nullptr ? std::string(zone->name) : timezone_name;
+}
+
+const char* PickDefaultNtpServer(const char* timezone_name)
+{
+    if (timezone_name != nullptr && (std::strcmp(timezone_name, "Asia/Shanghai") == 0 ||
+                                     std::strcmp(timezone_name, "Asia/Urumqi") == 0)) {
         return kChinaNtpServer;
     }
     return kDefaultNtpServer;
@@ -218,12 +153,12 @@ const char* PickDefaultNtpServer(const char* timezone_tz)
 
 bool ApplyTimezoneByName(const std::string& timezone_name)
 {
-    const TimezoneCatalogEntry* timezone = FindTimezoneByName(timezone_name.c_str());
-    if (timezone == nullptr || timezone->tz_string == nullptr || timezone->tz_string[0] == '\0') {
+    const ZoneEntry* timezone = FindTimezoneByName(timezone_name.c_str());
+    if (timezone == nullptr || timezone->tz == nullptr || timezone->tz[0] == '\0') {
         return false;
     }
 
-    setenv("TZ", timezone->tz_string, 1);
+    setenv("TZ", timezone->tz, 1);
     tzset();
     return true;
 }
@@ -297,7 +232,7 @@ void LoadSettingsFromStorage()
     esp_err_t err = nvs_open(kNvsNamespace, NVS_READONLY, &handle);
     if (err != ESP_OK) {
         s_enabled = CONFIG_CHRONINKLE_TIME_SYNC_DEFAULT_ENABLED;
-        s_timezone_name = CONFIG_CHRONINKLE_DEFAULT_TIMEZONE_NAME;
+        s_timezone_name = CanonicalTimezoneName(CONFIG_CHRONINKLE_DEFAULT_TIMEZONE_NAME);
         s_location.clear();
         return;
     }
@@ -313,6 +248,9 @@ void LoadSettingsFromStorage()
     if (s_timezone_name.empty()) {
         s_timezone_name = CONFIG_CHRONINKLE_DEFAULT_TIMEZONE_NAME;
     }
+    // Devices set up before the full zone list stored region names like "Israel"; read them
+    // as the zone they mean.
+    s_timezone_name = CanonicalTimezoneName(s_timezone_name);
     LoadString(handle, kLocationKey, &s_location);
     uint8_t hour24 = 0;
     if (nvs_get_u8(handle, kHour24Key, &hour24) == ESP_OK) {
@@ -843,6 +781,7 @@ esp_err_t HandlePortalTimezoneList(httpd_req_t* request)
         cJSON* item = cJSON_CreateObject();
         cJSON_AddStringToObject(item, "name", timezone.name.c_str());
         cJSON_AddStringToObject(item, "description", timezone.description.c_str());
+        cJSON_AddStringToObject(item, "region", timezone.region.c_str());
         cJSON_AddItemToArray(timezones, item);
     }
     return SendJsonResponse(request, 200, root);
@@ -919,21 +858,14 @@ Snapshot GetSnapshot()
 std::vector<TimezoneInfo> ListTimezones()
 {
     std::vector<TimezoneInfo> timezones;
-    timezones.reserve(std::size(kTimezones));
-    for (const auto& timezone : kTimezones) {
+    timezones.reserve(std::size(generated::kZones));
+    for (const auto& timezone : generated::kZones) {
         timezones.push_back({
             .name = timezone.name,
-            .description = timezone.description,
+            .description = timezone.label,
+            .region = timezone.region,
         });
     }
-    std::sort(timezones.begin(), timezones.end(),
-              [](const TimezoneInfo& lhs, const TimezoneInfo& rhs) {
-                  const std::string& lhs_label =
-                      lhs.description.empty() ? lhs.name : lhs.description;
-                  const std::string& rhs_label =
-                      rhs.description.empty() ? rhs.name : rhs.description;
-                  return lhs_label < rhs_label;
-              });
     return timezones;
 }
 
@@ -970,7 +902,7 @@ Result ApplySettingsPatch(const SettingsPatch& patch)
         staged_timezone_name = s_timezone_name;
         staged_location = s_location;
         if (patch.has_timezone_name) {
-            staged_timezone_name = TrimCopy(patch.timezone_name);
+            staged_timezone_name = CanonicalTimezoneName(TrimCopy(patch.timezone_name));
         }
         if (patch.has_location) {
             staged_location = TrimCopy(patch.location);
@@ -1051,12 +983,13 @@ bool SyncNow(const char* ntp_server, uint32_t timeout_ms)
         timezone_name = s_timezone_name;
     }
 
-    const TimezoneCatalogEntry* timezone =
+    const ZoneEntry* timezone =
         timezone_name.empty() ? nullptr : FindTimezoneByName(timezone_name.c_str());
-    const char* timezone_tz = timezone != nullptr ? timezone->tz_string : getenv("TZ");
+    const char* timezone_tz = timezone != nullptr ? timezone->tz : getenv("TZ");
     const char* server = ntp_server != nullptr && ntp_server[0] != '\0'
                              ? ntp_server
-                             : PickDefaultNtpServer(timezone_tz);
+                             : PickDefaultNtpServer(timezone != nullptr ? timezone->name
+                                                                        : nullptr);
 
     s_sync_in_progress.store(true, std::memory_order_relaxed);
     Notify();

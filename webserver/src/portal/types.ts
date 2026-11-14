@@ -20,7 +20,7 @@ export interface PortalResponse {
 export interface TimezoneListResponse {
   success: boolean;
   message?: string;
-  timezones?: Array<{ name: string; description?: string }>;
+  timezones?: Array<{ name: string; description?: string; region?: string }>;
 }
 
 export interface EffectsStatusResponse {

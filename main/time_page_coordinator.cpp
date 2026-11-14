@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 
 namespace {
 
@@ -101,6 +102,7 @@ void TimePageCoordinator::RefreshFromService(
     const std::vector<timezone_service::TimezoneInfo>& timezones)
 {
     timezones_ = timezones;
+    runtime_ = snapshot.runtime;
     if (!user_edited_) {
         LoadFromSnapshot(snapshot);
     }
@@ -382,6 +384,33 @@ timezone_service::SettingsPatch TimePageCoordinator::BuildSettingsPatch() const
     return patch;
 }
 
+std::string TimePageCoordinator::ClockStatusText() const
+{
+    if (runtime_.sync_in_progress) {
+        return "Getting the time over Wi-Fi...";
+    }
+    if (!runtime_.time_valid) {
+        return "Clock not set. Pick your timezone and connect Wi-Fi, or set it below.";
+    }
+    if (runtime_.time_source == timezone_service::TimeSource::kNtp &&
+        runtime_.last_network_sync_epoch != 0) {
+        const std::time_t synced = static_cast<std::time_t>(runtime_.last_network_sync_epoch);
+        std::tm local = {};
+        localtime_r(&synced, &local);
+        char when[16] = {};
+        if (use_24_hour_) {
+            std::strftime(when, sizeof(when), "%H:%M", &local);
+        } else {
+            const int hour12 = To12Hour(local.tm_hour);
+            std::snprintf(when, sizeof(when), "%d:%02d %s", hour12, local.tm_min,
+                          local.tm_hour >= 12 ? "PM" : "AM");
+        }
+        return std::string("Set over Wi-Fi at ") + when +
+               ". It stays right on its own; a time typed below is replaced at the next sync.";
+    }
+    return "Set by hand. Connecting to Wi-Fi sets the exact time automatically.";
+}
+
 epaper_ui::TimePageState TimePageCoordinator::BuildState() const
 {
     epaper_ui::TimePageState state = {};
@@ -391,6 +420,7 @@ epaper_ui::TimePageState TimePageCoordinator::BuildState() const
     state.timezone.placeholder_text = "Select timezone";
     state.timezone.value_text = timezone_description_;
     state.timezone.focused = IsRoleFocused(NavigationItemRole::kTimePageTimezone);
+    state.clock_status_text = ClockStatusText();
 
     state.hour.value_text = hour_;
     state.hour.suffix_text = "HR";

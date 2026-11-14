@@ -76,6 +76,7 @@ export function createTimeController(deps: TimeControllerDeps) {
     deps.setSwitchChecked(deps.clockModeToggle, Boolean(settings?.enabled));
     deps.timezoneSelect.value = settings?.timezone_name || '';
     deps.clearFieldError(deps.timezoneSelect);
+    updateTimezoneDetectHint();
     deps.manualDateInput.value =
       typeof runtime?.current_date === 'string' ? runtime.current_date : '';
     deps.manualTimeInput.value =
@@ -97,7 +98,68 @@ export function createTimeController(deps: TimeControllerDeps) {
       typeof runtime.current_time === 'string' ? runtime.current_time : '';
   }
 
+  // The zone names the device offers (current IANA names). Used to match the phone's own
+  // timezone, which a browser may report under an older name (e.g. "Asia/Calcutta").
+  let knownTimezones: string[] = [];
+
+  function canonicalZone(name: string): string {
+    try {
+      return new Intl.DateTimeFormat('en-US', { timeZone: name }).resolvedOptions().timeZone;
+    } catch {
+      return name;
+    }
+  }
+
+  function detectedTimezone(): string {
+    let detected = '';
+    try {
+      detected = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {
+      return '';
+    }
+    if (!detected) {
+      return '';
+    }
+    if (knownTimezones.includes(detected)) {
+      return detected;
+    }
+    const wanted = canonicalZone(detected);
+    return knownTimezones.find(name => canonicalZone(name) === wanted) || '';
+  }
+
+  // Offers "This phone is set to X. Use it" when the phone's timezone is one the device knows
+  // and differs from what is selected.
+  function updateTimezoneDetectHint() {
+    const row = document.getElementById('timezoneDetectRow');
+    const nameElement = document.getElementById('timezoneDetectName');
+    if (!row || !nameElement) {
+      return;
+    }
+    const detected = detectedTimezone();
+    const show = detected !== '' && deps.timezoneSelect.value !== detected;
+    row.style.display = show ? '' : 'none';
+    if (show) {
+      nameElement.textContent = detected.replace(/_/g, ' ');
+    }
+  }
+
+  function useDetectedTimezone() {
+    const detected = detectedTimezone();
+    if (!detected) {
+      return;
+    }
+    deps.timezoneSelect.value = detected;
+    deps.clearFieldError(deps.timezoneSelect);
+    updateTimezoneDetectHint();
+    deps.onStateChange();
+    deps.notify('Timezone selected. Press Save to apply it.', 'info');
+  }
+
+  document.getElementById('timezoneDetectBtn')?.addEventListener('click', useDetectedTimezone);
+  deps.timezoneSelect.addEventListener('change', updateTimezoneDetectHint);
+
   async function populateTimezoneOptions() {
+    const previousValue = deps.timezoneSelect.value;
     deps.timezoneSelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
@@ -107,19 +169,29 @@ export function createTimeController(deps: TimeControllerDeps) {
     try {
       const data = await fetchTimezoneList();
       const timezones = Array.isArray(data.timezones) ? data.timezones : [];
-      const labelMap = deps.buildTimezoneLabelMap(timezones);
-      timezones
-        .map(item => ({
-          value: item.name,
-          label: deps.formatTimezoneLabel(item, labelMap),
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label))
-        .forEach(option => {
-          const element = document.createElement('option');
-          element.value = option.value;
-          element.textContent = option.label;
-          deps.timezoneSelect.appendChild(element);
-        });
+      knownTimezones = timezones.map(item => item.name);
+      // Group by region in the order the device lists them (UTC first); the device's labels
+      // already carry the UTC offset, e.g. "Jerusalem (UTC+2/+3)".
+      const groups = new Map<string, HTMLOptGroupElement>();
+      timezones.forEach(item => {
+        const region = item.region || 'Other';
+        let group = groups.get(region);
+        if (!group) {
+          group = document.createElement('optgroup');
+          group.label = region;
+          groups.set(region, group);
+          deps.timezoneSelect.appendChild(group);
+        }
+        const element = document.createElement('option');
+        element.value = item.name;
+        element.textContent =
+          item.description?.trim() || deps.formatTimezoneLabel(item, new Map());
+        group.appendChild(element);
+      });
+      if (previousValue) {
+        deps.timezoneSelect.value = previousValue;
+      }
+      updateTimezoneDetectHint();
     } catch (error) {
       console.error('Timezone list fetch failed:', error);
       deps.notify(

@@ -3,6 +3,21 @@
 This repo keeps e-paper asset generators ported from the sibling `followup`
 firmware repo.
 
+## Timezones
+
+`generate_timezones.mjs` writes `components/timezone_service/generated_timezones.h`: every
+IANA timezone in the tz database bundled with Node.js, each with a POSIX `TZ` rule the
+device's C library understands, an on-device label such as `Jerusalem (UTC+2/+3)`, and an
+alias list (old names such as `Asia/Calcutta`, and the region names older firmware stored).
+Each rule is checked against the real clock changes for a full 28-year cycle; zones whose
+changes do not follow a yearly rule (Morocco, Western Sahara, Gaza and Hebron follow Ramadan)
+use their usual offset all year, and the script lists them. Re-run it after a Node.js update
+to pick up tz database changes:
+
+```bash
+node scripts/generate_timezones.mjs
+```
+
 ## E-paper Assets
 
 Source artwork lives in:

@@ -19,8 +19,9 @@ enum class TimeSource : uint8_t {
 };
 
 struct TimezoneInfo {
-    std::string name;
-    std::string description;
+    std::string name;         // IANA name, e.g. "Asia/Jerusalem"
+    std::string description;  // picker label, e.g. "Jerusalem (UTC+2/+3)"
+    std::string region;       // "Asia", "Europe", ... ("UTC" for UTC itself)
 };
 
 struct SettingsSnapshot {
