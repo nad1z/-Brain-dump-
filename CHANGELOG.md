@@ -17,6 +17,9 @@ via `git log`, not backfilled here.
   picked by hand is never overridden. Title and due date are stored in the
   recording's metadata (`title`, `due_local`) for the upcoming reminders
   and calendar work; they are not shown on the device yet.
+- **Reminders on the lock screen.** Pending Tasks that have a due date are
+  listed first on the lock screen, soonest first, labelled "Today 09:30",
+  "Tomorrow", "Overdue" or the date.
 - Firmware updates are refused when the battery is below 30% and the
   device is not plugged in.
 

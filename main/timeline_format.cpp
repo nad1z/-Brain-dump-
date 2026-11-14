@@ -71,6 +71,77 @@ std::string FormatTimeLabel(bool time_valid, int64_t created_unix_seconds)
     return "--:--";
 }
 
+std::string FormatDueLabel(const std::string& due_local)
+{
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = -1;
+    int minute = 0;
+    const int fields =
+        std::sscanf(due_local.c_str(), "%4d-%2d-%2dT%2d:%2d", &year, &month, &day, &hour, &minute);
+    if (fields != 3 && fields != 5) {
+        return {};
+    }
+    if (month < 1 || month > 12 || day < 1 || day > 31 || (fields == 5 && (hour > 23 || minute > 59))) {
+        return {};
+    }
+
+    const std::time_t now = std::time(nullptr);
+    std::tm today = {};
+    localtime_r(&now, &today);
+
+    std::tm due = {};
+    due.tm_year = year - 1900;
+    due.tm_mon = month - 1;
+    due.tm_mday = day;
+    due.tm_hour = 12;  // midday: day arithmetic below is immune to daylight-saving shifts
+    due.tm_isdst = -1;
+    std::tm today_noon = today;
+    today_noon.tm_hour = 12;
+    today_noon.tm_min = 0;
+    today_noon.tm_sec = 0;
+    const std::time_t due_stamp = std::mktime(&due);
+    const std::time_t today_stamp = std::mktime(&today_noon);
+    if (due_stamp == static_cast<std::time_t>(-1) || today_stamp == static_cast<std::time_t>(-1)) {
+        return {};
+    }
+    const long day_delta =
+        static_cast<long>((static_cast<long long>(due_stamp) - static_cast<long long>(today_stamp)) /
+                          86400LL);
+
+    std::string label;
+    const bool time_passed =
+        fields == 5 && day_delta == 0 &&
+        (hour < today.tm_hour || (hour == today.tm_hour && minute < today.tm_min));
+    if (day_delta < 0 || time_passed) {
+        return "Overdue";
+    }
+    if (day_delta == 0) {
+        label = "Today";
+    } else if (day_delta == 1) {
+        label = "Tomorrow";
+    } else {
+        char buffer[24] = {};
+        if (std::strftime(buffer, sizeof(buffer), "%a %b %d", &due) == 0) {
+            return {};
+        }
+        label = buffer;
+    }
+    if (fields == 5) {
+        char buffer[16] = {};
+        if (timezone_service::Use24HourClock()) {
+            std::snprintf(buffer, sizeof(buffer), " %02d:%02d", hour, minute);
+        } else {
+            const int hour12 = (hour % 12) == 0 ? 12 : hour % 12;
+            std::snprintf(buffer, sizeof(buffer), " %d:%02d %s", hour12, minute,
+                          hour >= 12 ? "PM" : "AM");
+        }
+        label += buffer;
+    }
+    return label;
+}
+
 std::string FormatDurationLabel(uint32_t duration_ms)
 {
     const uint32_t seconds = duration_ms / 1000U;
