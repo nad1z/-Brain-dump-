@@ -312,6 +312,13 @@ fields provided (hour, minute, AM/PM, month, day, year). Press **Sync &
 Save** when you're done — it both saves what you entered and re-syncs the
 clock.
 
+**12-hour or 24-hour clock.** The button next to the minutes cycles through
+**AM**, **PM** and **24H** each time you select it. Choose **24H** and press
+**Sync & Save** to show every time on the device — the status bar clock and
+the time on each recording — as 24-hour (for example `17:05` instead of
+`5:05 PM`). While **24H** is showing, enter the hour as 00–23. Cycle back to
+**AM** or **PM** and save to return to the 12-hour clock.
+
 ### Storage
 
 1. Free space and usage percent on the SD card (only shown when a card is

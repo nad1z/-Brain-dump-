@@ -833,8 +833,8 @@ Wi-Fi and time services follow the same boundary:
 Runtime-persisted settings live in service-owned NVS namespaces:
 
 - `wifi`: `ssid`, `password`
-- `timezone`: `enabled`, `tz_name`, `location`, `time_src`, `ntp_sync`,
-  `ntp_epoch`
+- `timezone`: `enabled`, `tz_name`, `location`, `hour24` (12/24-hour display
+  preference), `time_src`, `ntp_sync`, `ntp_epoch`
 - `rec_archive_cfg`: `days` (todo archive-after-days setting, `recording_archive_service`;
   deliberately a separate namespace from `recording_archive_service`'s own internal
   `rec_archive`/`counts` cached-counts blob, which isn't a user setting)

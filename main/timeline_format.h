@@ -21,8 +21,9 @@ std::string DateKey(const std::string& created_local_date);
 // once midnight passes. Empty / unparseable dates fall back to "Today".
 std::string FormatDateLabel(const std::string& created_local_date);
 
-// Clock time for a recording's header: "%I:%M %p" (leading zero stripped) when the timestamp is
-// valid, otherwise "--:--".
+// Clock time for a recording's header, following the user's 12/24-hour preference: "%H:%M"
+// in 24-hour mode, else "%I:%M %p" (leading zero stripped). "--:--" when the timestamp is
+// invalid.
 std::string FormatTimeLabel(bool time_valid, int64_t created_unix_seconds);
 
 // Compact duration: "<Ns>" under a minute, otherwise "<Nm>".

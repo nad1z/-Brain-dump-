@@ -8,6 +8,14 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added
+
+- A **24-hour clock** option. On the Time page the AM/PM button now cycles
+  AM, PM and 24H; saving with 24H selected shows the status bar clock and
+  every recording's time as `HH:MM` with no AM/PM. The choice is stored on
+  the device (`timezone` NVS namespace, `hour24`) and is also readable and
+  settable through the time settings API as `use_24_hour`.
+
 ## [1.0.0] - 2026-09-24
 
 This is the last planned release before v2, a complete front-end rewrite

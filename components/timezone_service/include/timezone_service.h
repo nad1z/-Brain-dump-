@@ -27,6 +27,9 @@ struct SettingsSnapshot {
     bool enabled = false;
     std::string timezone_name;
     std::string location;
+    // Display preference only: true shows clock times as "HH:MM" (00-23), false as 12-hour
+    // with an AM/PM suffix. Stored time is unaffected.
+    bool use_24_hour = false;
 };
 
 struct RuntimeSnapshot {
@@ -59,6 +62,8 @@ struct SettingsPatch {
     bool has_manual_datetime = false;
     std::string manual_date;
     std::string manual_time;
+    bool has_use_24_hour = false;
+    bool use_24_hour = false;
 };
 
 struct Result {
@@ -75,6 +80,8 @@ using EventHandler = void (*)(const Event& event, void* context);
 esp_err_t Init();
 void SetEventHandler(EventHandler handler, void* context);
 Snapshot GetSnapshot();
+// Cheap (lock-free) read of the 12/24-hour display preference, for per-row time formatting.
+bool Use24HourClock();
 std::vector<TimezoneInfo> ListTimezones();
 void SetNetworkConnected(bool connected);
 Result ApplySettingsPatch(const SettingsPatch& patch);

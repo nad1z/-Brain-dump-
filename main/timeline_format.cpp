@@ -54,6 +54,12 @@ std::string FormatTimeLabel(bool time_valid, int64_t created_unix_seconds)
         std::tm local = {};
         localtime_r(&stamp, &local);
         char buffer[16] = {};
+        if (timezone_service::Use24HourClock()) {
+            if (std::strftime(buffer, sizeof(buffer), "%H:%M", &local) > 0) {
+                return buffer;
+            }
+            return "--:--";
+        }
         if (std::strftime(buffer, sizeof(buffer), "%I:%M %p", &local) > 0) {
             std::string text = buffer;
             if (text.size() > 1 && text.front() == '0') {
