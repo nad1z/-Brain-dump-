@@ -31,6 +31,24 @@ std::string FormatTimeLabel(bool time_valid, int64_t created_unix_seconds);
 // 12/24-hour preference. Empty for an empty or malformed value.
 std::string FormatDueLabel(const std::string& due_local);
 
+// Short due label for a list row's tag pill: "Overdue", "Today", "Tomorrow", or the date
+// ("Nov 16"). Empty for an empty or malformed value. Built on FormatDueLabel, same rules.
+std::string FormatDueBadge(const std::string& due_local);
+
+// One-line text for a list row: the recording's title when the model gave it one (a short
+// summary reads better than a clipped transcript), else the transcript, else `fallback`
+// (e.g. "Audio only note.").
+std::string RowText(const std::string& title, const std::string& transcript, const std::string& fallback);
+
+// The lines the Details page puts above a transcript: the title and, for a reminder, its full
+// due label ("Due: Tomorrow 09:30"), then a blank line. Empty when there is neither.
+std::string DetailsPreamble(const std::string& title, const std::string& due_local);
+
+// Tag pill for a row: a pending Task with a due date shows its due badge; anything else its
+// type ("Task"/"Note"/"Idea").
+std::string TagOrDueText(recording_archive_service::RecordingTag tag, bool completed,
+                         const std::string& due_local);
+
 // Compact duration: "<Ns>" under a minute, otherwise "<Nm>".
 std::string FormatDurationLabel(uint32_t duration_ms);
 

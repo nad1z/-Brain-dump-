@@ -175,9 +175,18 @@ Move between them by tilting the rocker and pressing it in to **Select**.
 
 These three screens share the same layout: recordings are grouped by the
 day they were made. Select a day to open it, and you'll see the individual
-recordings inside — each showing a snippet of its transcript (or "Audio
-only" if it hasn't been transcribed yet), its time, and its length. Tap the
-Record button to back out of an opened day and return to the list of days.
+recordings inside — each showing its title, its time, and its length. The
+title is the short summary Auto filing gives a recording when it is
+transcribed (for example "Call the bank"); a recording without one shows the
+start of its transcript instead (or "Audio only" if it hasn't been
+transcribed yet). Tap the Record button to back out of an opened day and
+return to the list of days.
+
+**Due dates.** When you mention a day or time in a Task ("call the bank
+tomorrow at nine"), the small tag on its row shows when it's due instead of
+"Task": **Overdue**, **Today**, **Tomorrow**, or the date (for example
+**Nov 16**). This is on the Todos and Follow-up screens, only for Tasks that
+aren't done yet; a done Task, or one with no date, shows "Task" as before.
 
 What shows up where:
 
@@ -235,7 +244,9 @@ Current — but the deleted audio does not come back.
 
 ## Viewing a recording's details
 
-"View details" opens the full transcript for a recording, scrollable if
+"View details" opens the full transcript for a recording. When the recording
+has a title or a due date, they come first (for example "Call the bank" and
+"Due: Tomorrow 09:00"), then the transcript. The text is scrollable if
 it's long — select the scroll area and tilt the rocker to move through it
 a screenful at a time (the last line of the previous screen stays at the
 top, so you never lose your place). Below that:

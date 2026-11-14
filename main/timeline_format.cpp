@@ -142,6 +142,67 @@ std::string FormatDueLabel(const std::string& due_local)
     return label;
 }
 
+std::string FormatDueBadge(const std::string& due_local)
+{
+    const std::string label = FormatDueLabel(due_local);
+    if (label.empty() || label == "Overdue") {
+        return label;
+    }
+    if (label.rfind("Today", 0) == 0) {
+        return "Today";
+    }
+    if (label.rfind("Tomorrow", 0) == 0) {
+        return "Tomorrow";
+    }
+    // "Mon Nov 16 14:00" -> "Nov 16": drop the weekday and any time.
+    const size_t month_start = label.find(' ');
+    if (month_start == std::string::npos) {
+        return label;
+    }
+    const size_t day_end = label.find(' ', label.find(' ', month_start + 1) + 1);
+    return label.substr(month_start + 1, day_end == std::string::npos
+                                             ? std::string::npos
+                                             : day_end - month_start - 1);
+}
+
+std::string RowText(const std::string& title, const std::string& transcript, const std::string& fallback)
+{
+    const std::string trimmed_title = TrimTranscript(title);
+    if (!trimmed_title.empty()) {
+        return trimmed_title;
+    }
+    const std::string trimmed = TrimTranscript(transcript);
+    return trimmed.empty() ? fallback : trimmed;
+}
+
+std::string DetailsPreamble(const std::string& title, const std::string& due_local)
+{
+    std::string preamble;
+    const std::string trimmed_title = TrimTranscript(title);
+    if (!trimmed_title.empty()) {
+        preamble += trimmed_title + "\n";
+    }
+    const std::string due = FormatDueLabel(due_local);
+    if (!due.empty()) {
+        preamble += (due == "Overdue" ? std::string("Overdue") : "Due: " + due) + "\n";
+    }
+    if (!preamble.empty()) {
+        preamble += "\n";
+    }
+    return preamble;
+}
+
+std::string TagOrDueText(RecordingTag tag, bool completed, const std::string& due_local)
+{
+    if (tag == RecordingTag::kTask && !completed) {
+        const std::string badge = FormatDueBadge(due_local);
+        if (!badge.empty()) {
+            return badge;
+        }
+    }
+    return TagText(tag);
+}
+
 std::string FormatDurationLabel(uint32_t duration_ms)
 {
     const uint32_t seconds = duration_ms / 1000U;

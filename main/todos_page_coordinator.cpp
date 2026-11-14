@@ -92,8 +92,11 @@ std::vector<TodosPageCoordinator::TimelineGroup> TodosPageCoordinator::BuildGrou
         timeline_entry.item.header.time_text = timeline_format::FormatTimeLabel(entry.metadata.time_valid, entry.metadata.created_unix_seconds);
         timeline_entry.item.header.minute_seconds_text =
             timeline_format::FormatDurationLabel(entry.metadata.duration_ms);
-        timeline_entry.item.header.tag_text = "Task";
-        timeline_entry.item.body_text = has_transcription ? transcript : "Audio only todo.";
+        // Every row here is a Task, so the pill carries the due date when there is one.
+        timeline_entry.item.header.tag_text = timeline_format::TagOrDueText(
+            entry.metadata.tag, entry.metadata.completed, entry.metadata.due_local);
+        timeline_entry.item.body_text = timeline_format::RowText(
+            entry.metadata.title, has_transcription ? transcript : std::string(), "Audio only todo.");
         timeline_entry.item.accessory.kind = epaper_ui::ListItemAccessoryKind::kCheckbox;
         timeline_entry.item.accessory.checked = entry.metadata.completed;
         groups[static_cast<size_t>(group_index)].entries.push_back(std::move(timeline_entry));

@@ -90,7 +90,8 @@ std::vector<NotesPageCoordinator::TimelineGroup> NotesPageCoordinator::BuildGrou
         timeline_entry.item.header.minute_seconds_text =
             timeline_format::FormatDurationLabel(entry.metadata.duration_ms);
         timeline_entry.item.header.tag_text = timeline_format::TagText(entry.metadata.tag);
-        timeline_entry.item.body_text = has_transcription ? transcript : "Audio only note.";
+        timeline_entry.item.body_text = timeline_format::RowText(
+            entry.metadata.title, has_transcription ? transcript : std::string(), "Audio only note.");
         timeline_entry.item.accessory.kind = epaper_ui::ListItemAccessoryKind::kNone;
         groups[static_cast<size_t>(group_index)].entries.push_back(std::move(timeline_entry));
     }

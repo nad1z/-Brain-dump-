@@ -84,9 +84,11 @@ std::vector<FollowUpPageCoordinator::TimelineGroup> FollowUpPageCoordinator::Bui
         timeline_entry.item.header.time_text = timeline_format::FormatTimeLabel(entry.metadata.time_valid, entry.metadata.created_unix_seconds);
         timeline_entry.item.header.minute_seconds_text =
             timeline_format::FormatDurationLabel(entry.metadata.duration_ms);
-        timeline_entry.item.header.tag_text = timeline_format::TagText(entry.metadata.tag);
-        timeline_entry.item.body_text =
-            has_transcription ? transcript : "Audio only follow-up item.";
+        timeline_entry.item.header.tag_text = timeline_format::TagOrDueText(
+            entry.metadata.tag, entry.metadata.completed, entry.metadata.due_local);
+        timeline_entry.item.body_text = timeline_format::RowText(
+            entry.metadata.title, has_transcription ? transcript : std::string(),
+            "Audio only follow-up item.");
         timeline_entry.item.accessory.kind = epaper_ui::ListItemAccessoryKind::kCheckbox;
         // The checkbox is a tap-to-complete affordance; completing clears the flag and the item
         // leaves the list, so it always renders unchecked.

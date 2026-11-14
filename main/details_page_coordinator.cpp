@@ -184,7 +184,12 @@ void DetailsPageCoordinator::ApplyEntry(const RecordingEntry& entry)
     const std::string transcript = timeline_format::TrimTranscript(entry.transcript_text);
     has_transcript_ = entry.metadata.has_transcript && !transcript.empty();
     has_audio_file_ = entry.has_audio_file;
-    transcript_text_ = transcript;
+    // Title and due date first, then the transcript they summarise.
+    transcript_text_ =
+        has_transcript_
+            ? timeline_format::DetailsPreamble(entry.metadata.title, entry.metadata.due_local) +
+                  transcript
+            : transcript;
     last_transcription_error_ = entry.metadata.last_transcription_error;
     topic_ids_ = entry.metadata.topic_ids;
     // "Details" (this page's own fallback title) when there's no date at all, rather than
@@ -202,6 +207,7 @@ void DetailsPageCoordinator::ApplyEntry(const RecordingEntry& entry)
         entry.metadata.time_valid, entry.metadata.created_unix_seconds);
     recording_header_.minute_seconds_text =
         timeline_format::FormatDurationLabel(entry.metadata.duration_ms);
-    recording_header_.tag_text = timeline_format::TagText(entry.metadata.tag);
+    recording_header_.tag_text = timeline_format::TagOrDueText(
+        entry.metadata.tag, entry.metadata.completed, entry.metadata.due_local);
     recording_header_.selected = false;
 }

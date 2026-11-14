@@ -8,6 +8,17 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-11-14
+
+### Added
+
+- **Titles and due dates on the device.** The title and due date Auto
+  filing has been saving since 1.4.0 are now shown. Rows on Notes, Todos and
+  Follow-up show the recording's title (else the start of its transcript, as
+  before). A pending Task with a due date shows it in the row's tag instead
+  of "Task": Overdue, Today, Tomorrow or the date ("Nov 16"). Details lists
+  the title and "Due: ..." above the transcript.
+
 ## [1.10.0] - 2026-11-14
 
 ### Added
