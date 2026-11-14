@@ -18,6 +18,11 @@ struct Snapshot {
     std::string last_error_code = {};
     std::string last_error_message = {};
     std::string last_transcript = {};
+    // Organisation the model returned with last_transcript (see gemini_service::
+    // TranscriptionResult); each is empty when not given. Cleared together with it.
+    std::string last_suggested_tag = {};
+    std::string last_title = {};
+    std::string last_due_local = {};
 };
 
 struct Event {

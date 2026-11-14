@@ -22,6 +22,9 @@ std::string s_last_status_message = {};
 std::string s_last_error_code = {};
 std::string s_last_error_message = {};
 std::string s_last_transcript = {};
+std::string s_last_suggested_tag = {};
+std::string s_last_title = {};
+std::string s_last_due_local = {};
 
 Snapshot BuildSnapshotLocked()
 {
@@ -34,6 +37,9 @@ Snapshot BuildSnapshotLocked()
     snapshot.last_error_code = s_last_error_code;
     snapshot.last_error_message = s_last_error_message;
     snapshot.last_transcript = s_last_transcript;
+    snapshot.last_suggested_tag = s_last_suggested_tag;
+    snapshot.last_title = s_last_title;
+    snapshot.last_due_local = s_last_due_local;
     return snapshot;
 }
 
@@ -63,6 +69,9 @@ void RunTranscriptionJob(recording_service::RecordedClipPtr clip)
         s_last_error_code = "empty_audio";
         s_last_error_message = "No recorded audio available";
         s_last_transcript.clear();
+        s_last_suggested_tag.clear();
+        s_last_title.clear();
+        s_last_due_local.clear();
         NotifyLocked();
         return;
     }
@@ -78,6 +87,9 @@ void RunTranscriptionJob(recording_service::RecordedClipPtr clip)
             s_last_error_code.clear();
             s_last_error_message.clear();
             s_last_transcript = result.transcript;
+            s_last_suggested_tag = result.suggested_tag;
+            s_last_title = result.title;
+            s_last_due_local = result.due_local;
             ESP_LOGI(kTag,
                      "Gemini transcription succeeded: chars=%u wav_bytes=%u clip_ms=%u "
                      "upload_chunks=%u upload_elapsed_ms=%llu total_elapsed_ms=%llu",
@@ -92,6 +104,9 @@ void RunTranscriptionJob(recording_service::RecordedClipPtr clip)
             s_last_error_code = result.error_code;
             s_last_error_message = result.error_message;
             s_last_transcript.clear();
+            s_last_suggested_tag.clear();
+            s_last_title.clear();
+            s_last_due_local.clear();
             ESP_LOGW(kTag, "Gemini transcription failed: http=%d code=%s message=%s",
                      result.http_status, s_last_error_code.c_str(), s_last_error_message.c_str());
         }
@@ -117,6 +132,9 @@ esp_err_t Init()
     s_last_error_code.clear();
     s_last_error_message.clear();
     s_last_transcript.clear();
+    s_last_suggested_tag.clear();
+    s_last_title.clear();
+    s_last_due_local.clear();
     return ESP_OK;
 }
 
@@ -160,6 +178,9 @@ bool BeginTranscription(recording_service::RecordedClipPtr clip)
                                        ? "Gemini is not ready yet"
                                        : "No Gemini API key configured";
             s_last_transcript.clear();
+            s_last_suggested_tag.clear();
+            s_last_title.clear();
+            s_last_due_local.clear();
             NotifyLocked();
             return false;
         }
@@ -169,6 +190,9 @@ bool BeginTranscription(recording_service::RecordedClipPtr clip)
             s_last_error_code = "empty_audio";
             s_last_error_message = "No recorded audio available";
             s_last_transcript.clear();
+            s_last_suggested_tag.clear();
+            s_last_title.clear();
+            s_last_due_local.clear();
             NotifyLocked();
             return false;
         }
@@ -179,6 +203,9 @@ bool BeginTranscription(recording_service::RecordedClipPtr clip)
         s_last_error_code.clear();
         s_last_error_message.clear();
         s_last_transcript.clear();
+        s_last_suggested_tag.clear();
+        s_last_title.clear();
+        s_last_due_local.clear();
         NotifyLocked();
     }
 

@@ -1,6 +1,8 @@
 #ifndef FIRMWARE_UPDATE_SERVICE_H_
 #define FIRMWARE_UPDATE_SERVICE_H_
 
+#include <string>
+
 #include "esp_http_server.h"
 
 // Over-the-air firmware update, driven from the device's web page.
@@ -12,6 +14,11 @@
 //
 // Does not own: the HTTP server (wifi_service), or any UI.
 namespace firmware_update_service {
+
+// Product-level veto, asked once before an upload is accepted (e.g. "battery too low").
+// Return false and fill `reason` with a sentence for the user to refuse the update.
+using Precondition = bool (*)(std::string* reason);
+void SetPrecondition(Precondition precondition);
 
 // True from the first received byte until the device restarts or the upload fails.
 bool IsUpdateInProgress();

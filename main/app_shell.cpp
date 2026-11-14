@@ -1455,10 +1455,29 @@ void HandleTimezoneEvent(const timezone_service::Event& event, void*)
     }
 }
 
+// A firmware update that loses power midway leaves the spare slot half-written (harmless, the
+// running firmware is untouched) but wastes the attempt; refuse on a low battery unless USB
+// power is present.
+bool FirmwareUpdateAllowed(std::string* reason)
+{
+    constexpr uint16_t kMinBatteryPercent = 30;
+    power_service::Status status = {};
+    if (power_service::ReadStatus(&status) != ESP_OK || status.usb_detected ||
+        !status.battery.available ||
+        status.battery.state_of_charge_percent >= kMinBatteryPercent) {
+        return true;
+    }
+    if (reason != nullptr) {
+        *reason = "Battery is below 30%. Plug the device in and try again.";
+    }
+    return false;
+}
+
 void RegisterWifiBackendRoutes(httpd_handle_t server, void*)
 {
     timezone_service::RegisterPortalRoutes(server);
     gemini_service::RegisterPortalRoutes(server);
+    firmware_update_service::SetPrecondition(FirmwareUpdateAllowed);
     firmware_update_service::RegisterPortalRoutes(server);
 }
 

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "epaper_ui/details_page.h"
+#include "epaper_ui/select_modal.h"
 #include "epaper_ui/status_bar.h"
 #include "epaper_ui/time_page.h"
 
@@ -105,6 +106,29 @@ void RenderDetailsPage(const std::string& out_dir, const std::string& name,
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+// The "Save recording as" menu shown after a recording, drawn over a Details page.
+void RenderSaveMenu(const std::string& out_dir, const std::string& name)
+{
+    epaper_ui::DetailsPageState page = {};
+    page.back_button.label_text = "Back";
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawDetailsPage(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                               kPortraitHeight, page, StatusBar("17:05"),
+                               epaper_ui::GlobalFooterState{});
+
+    epaper_ui::SelectModalState modal = {};
+    modal.visible = true;
+    modal.title_text = "Save recording as";
+    modal.selected_index = 0;
+    for (const char* label : {"Auto", "Note", "Task", "Idea", "Topic", "Discard"}) {
+        modal.items.push_back({.label_text = label});
+    }
+    epaper_ui::DrawSelectModal(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                               kPortraitHeight, modal);
+    const std::string path = out_dir + "/" + name + ".pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -112,6 +136,7 @@ int main(int argc, char** argv)
     const std::string out_dir = argc > 1 ? argv[1] : ".";
     RenderTimePage(out_dir, "time_page_12h", "05", "PM", "5:05 PM");
     RenderTimePage(out_dir, "time_page_24h", "17", "24H", "17:05");
+    RenderSaveMenu(out_dir, "save_menu");
     RenderDetailsPage(out_dir, "details_english",
                       "Idea for the brain dump device: sync reminders to the calendar, and keep "
                       "the radio off until there is something to send.");

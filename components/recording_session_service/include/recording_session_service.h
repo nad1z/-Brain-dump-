@@ -95,6 +95,10 @@ struct TagOption {
     // distilled into a short name, and added to topic_service's registry as a new topic. Like
     // is_discard, `tag` is unused.
     bool is_topic = false;
+    // When true, the recording is archived and the model picks Note/Task/Idea for it once the
+    // transcript comes back (recording_archive_service::RecordingMetadata::auto_tag). `tag` is
+    // the placeholder it is filed under until then.
+    bool is_auto = false;
 };
 
 using EventHandler = void (*)(const Event& event, void* context);
@@ -108,7 +112,7 @@ void SetEventHandler(EventHandler handler, void* context);
 // attempted (and fail) instead of being flagged pending_transcription for automatic retry.
 void SetNetworkConnected(bool connected);
 Snapshot GetSnapshot();
-const std::array<TagOption, 5>& TagOptions();
+const std::array<TagOption, 6>& TagOptions();
 
 bool HandlePowerPressDown(const Context& context);
 bool HandlePowerLongPressStart(const Context& context);

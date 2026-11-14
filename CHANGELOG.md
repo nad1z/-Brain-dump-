@@ -10,6 +10,16 @@ via `git log`, not backfilled here.
 
 ### Added
 
+- **Auto filing.** The save menu has a new first choice, **Auto**: the same
+  request that transcribes a recording now also returns its type
+  (Note/Task/Idea), a short English title and, when a day or time was
+  spoken, a due date. Auto recordings take the suggested type; a type
+  picked by hand is never overridden. Title and due date are stored in the
+  recording's metadata (`title`, `due_local`) for the upcoming reminders
+  and calendar work; they are not shown on the device yet.
+- Firmware updates are refused when the battery is below 30% and the
+  device is not plugged in.
+
 - **Hebrew on screen.** Transcripts, list previews, summaries, lock-screen
   to-dos and Books now draw Hebrew right to left (Heebo glyphs for the
   letter block, a compact bidirectional layout for mixed Hebrew/English/

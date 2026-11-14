@@ -40,6 +40,7 @@ std::atomic<bool> s_in_progress{false};
 std::atomic<uint32_t> s_received{0};
 std::atomic<uint32_t> s_total{0};
 esp_timer_handle_t s_restart_timer = nullptr;
+std::atomic<Precondition> s_precondition{nullptr};
 
 const char* StateName(State state)
 {
@@ -163,6 +164,14 @@ esp_err_t HandleUpload(httpd_req_t* request)
     std::unique_ptr<char[]> buffer(new (std::nothrow) char[kReceiveBufferBytes]);
     if (!buffer) {
         return Fail(request, HTTPD_500, "Not enough memory to receive the update");
+    }
+
+    const Precondition precondition = s_precondition.load(std::memory_order_relaxed);
+    std::string refusal;
+    if (precondition != nullptr && !precondition(&refusal)) {
+        DrainBody(request, total, buffer.get());
+        return Fail(request, "409 Conflict",
+                    refusal.empty() ? "The device cannot be updated right now" : refusal);
     }
 
     const esp_partition_t* target = esp_ota_get_next_update_partition(nullptr);
@@ -296,6 +305,11 @@ esp_err_t HandleUpload(httpd_req_t* request)
 }
 
 }  // namespace
+
+void SetPrecondition(Precondition precondition)
+{
+    s_precondition.store(precondition, std::memory_order_relaxed);
+}
 
 bool IsUpdateInProgress()
 {

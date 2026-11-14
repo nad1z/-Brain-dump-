@@ -98,7 +98,14 @@ This is the core interaction:
    seconds, it stops automatically.
 3. **Release the Record button.** You'll hear a stop cue, and Chroninkle
    immediately plays your recording back to you.
-4. **Choose a tag**, from a menu with five options:
+4. **Choose a tag**, from a menu with six options:
+   - **Auto** — the first choice, so one press of the select button is
+     enough. Chroninkle files the recording for you: when it is
+     transcribed, it is sorted into Note, Task or Idea based on what you
+     said ("remind me to call the bank tomorrow" becomes a Task). Until
+     the transcript arrives — for example while there's no WiFi — it sits
+     with your Notes. If you later change the type yourself, your choice
+     is kept.
    - **Note** — a general thought.
    - **Task** — something to do. (This is what shows up on the **Todos**
      screen — the tag itself is called "Task," even though the screen
@@ -113,7 +120,7 @@ This is the core interaction:
    - **Discard** — throws the recording away. Nothing is saved to the SD
      card if you pick this — that's exactly why the review-then-tag order
      exists: you get to hear it back before deciding.
-5. If you tagged it Note, Task, or Idea, and Chroninkle has WiFi and a
+5. If you chose Auto, Note, Task, or Idea, and Chroninkle has WiFi and a
    Gemini key configured, it transcribes the recording in the
    background — you'll see a brief "Transcribing recording..." message,
    then either a transcript being saved or a note that transcription
@@ -390,6 +397,9 @@ don't need a USB cable.
    Update**. The page shows the installed version and the upload progress.
 5. Keep the page open and the device powered until it restarts by itself,
    about a minute. The page then shows the new version.
+
+If the battery is below 30% and the device isn't plugged in, it refuses the
+update and asks you to plug it in first.
 
 If the file is the wrong one or arrives damaged, the device refuses it and
 keeps running the version it had. If a new version fails to start, the

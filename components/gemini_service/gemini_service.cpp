@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -59,10 +60,21 @@ constexpr const char* kWorkerTaskName = "gemini_worker";
 constexpr const char* kUploadUrl =
     "https://generativelanguage.googleapis.com/upload/v1beta/files";
 constexpr const char* kAudioMimeType = "audio/wav";
+// One request does both jobs -- transcribe and organise -- so the radio is not kept up for a
+// second round trip. The reply is a small JSON object; ParseOrganizedTranscript falls back to
+// treating the whole reply as the transcript if the model ignores the format.
 constexpr const char* kTranscriptPrompt =
-    "Generate a verbatim transcript of the speech in this audio, in the language that is "
-    "spoken (do not translate; keep mixed-language speech as spoken). Respond with transcript "
-    "text only. Do not add commentary or formatting.";
+    "Transcribe the speech in this audio and organise it. Reply with one JSON object and "
+    "nothing else, with these string fields:\n"
+    "\"transcript\": the verbatim transcript, in the language that is spoken (do not "
+    "translate; keep mixed-language speech as spoken).\n"
+    "\"type\": \"task\" if the speaker is telling themselves to do something or to be "
+    "reminded of something, \"idea\" for an idea, plan or thing to explore, otherwise "
+    "\"note\".\n"
+    "\"title\": a title of at most six words, in English even when the speech is not.\n"
+    "\"due\": if the speaker gives a day or time for a task, that moment in local time as "
+    "YYYY-MM-DD or YYYY-MM-DDTHH:MM (24-hour); otherwise an empty string. Resolve relative "
+    "expressions such as \"tomorrow\" against the current local date and time, which is: ";
 constexpr int kTranscribeTimeoutMs = 30000;
 constexpr size_t kHttpUploadChunkSamples = 2048;
 
@@ -1177,6 +1189,63 @@ HttpResponse PerformUploadFinalizePcmWav(const std::string& upload_url,
     return response;
 }
 
+// "2026-11-14 17:05, Saturday" in the device's configured timezone; empty when the clock has
+// not been set (the model then has nothing to resolve "tomorrow" against and leaves due empty).
+std::string CurrentLocalTimeForPrompt()
+{
+    const std::time_t now = std::time(nullptr);
+    std::tm local = {};
+    localtime_r(&now, &local);
+    if (local.tm_year + 1900 < 2024) {
+        return "unknown (leave \"due\" empty)";
+    }
+    char buffer[48] = {};
+    if (std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M, %A", &local) == 0) {
+        return "unknown (leave \"due\" empty)";
+    }
+    return buffer;
+}
+
+// Splits the model's JSON reply into transcript + organisation fields. A reply that is not the
+// requested JSON (older model, safety rewrite, plain text) is kept whole as the transcript.
+void ParseOrganizedTranscript(const std::string& reply, TranscriptionResult* result)
+{
+    const size_t open = reply.find('{');
+    const size_t close = reply.rfind('}');
+    cJSON* root = nullptr;
+    if (open != std::string::npos && close != std::string::npos && close > open) {
+        root = cJSON_ParseWithLength(reply.c_str() + open, close - open + 1);
+    }
+    cJSON* transcript = root != nullptr ? cJSON_GetObjectItemCaseSensitive(root, "transcript")
+                                        : nullptr;
+    if (!cJSON_IsString(transcript) || transcript->valuestring == nullptr) {
+        result->transcript = reply;
+        cJSON_Delete(root);
+        return;
+    }
+    result->transcript = transcript->valuestring;
+    const auto read = [root](const char* key) -> std::string {
+        cJSON* item = cJSON_GetObjectItemCaseSensitive(root, key);
+        return (cJSON_IsString(item) && item->valuestring != nullptr) ? item->valuestring : "";
+    };
+    const std::string type = read("type");
+    if (type == "task" || type == "idea" || type == "note") {
+        result->suggested_tag = type;
+    }
+    result->title = read("title");
+    if (result->title.size() > 80) {
+        result->title.clear();  // not a title; do not store a paragraph
+    }
+    const std::string due = read("due");
+    // Accept only the two documented shapes so nothing free-form reaches the metadata file.
+    const bool date_only = due.size() == 10;
+    const bool date_time = due.size() == 16 && due[10] == 'T' && due[13] == ':';
+    if ((date_only || date_time) && due[4] == '-' && due[7] == '-') {
+        result->due_local = due;
+    }
+    cJSON_Delete(root);
+}
+
 std::string BuildTranscriptRequestJson(const std::string& file_uri)
 {
     cJSON* root = cJSON_CreateObject();
@@ -1186,7 +1255,8 @@ std::string BuildTranscriptRequestJson(const std::string& file_uri)
     cJSON* parts = cJSON_AddArrayToObject(content, "parts");
 
     cJSON* prompt_part = cJSON_CreateObject();
-    cJSON_AddStringToObject(prompt_part, "text", kTranscriptPrompt);
+    const std::string prompt = std::string(kTranscriptPrompt) + CurrentLocalTimeForPrompt();
+    cJSON_AddStringToObject(prompt_part, "text", prompt.c_str());
     cJSON_AddItemToArray(parts, prompt_part);
 
     cJSON* audio_part = cJSON_CreateObject();
@@ -1197,6 +1267,7 @@ std::string BuildTranscriptRequestJson(const std::string& file_uri)
 
     cJSON* generation_config = cJSON_AddObjectToObject(root, "generationConfig");
     cJSON_AddNumberToObject(generation_config, "temperature", 0);
+    cJSON_AddStringToObject(generation_config, "responseMimeType", "application/json");
 
     char* raw = cJSON_PrintUnformatted(root);
     std::string json = raw != nullptr ? raw : "";
@@ -1622,7 +1693,8 @@ TranscriptionResult Transcribe(const recording_service::RecordedClip& clip)
 
     cJSON* root = cJSON_ParseWithLength(http.body.c_str(), http.body.size());
     if (http.status_code >= 200 && http.status_code < 300) {
-        result.transcript = TrimForLog(ExtractCandidateText(root), 1U << 20);
+        ParseOrganizedTranscript(ExtractCandidateText(root), &result);
+        result.transcript = TrimForLog(result.transcript, 1U << 20);
         result.success = !result.transcript.empty();
         if (!result.success) {
             result.error_code = "empty_transcript";

@@ -295,6 +295,9 @@ std::string SerializeMetadata(const ArchiveMetadata& metadata)
         cJSON_AddItemToArray(topic_ids, cJSON_CreateString(topic_id.c_str()));
     }
     cJSON_AddItemToObject(root, "topic_ids", topic_ids);
+    cJSON_AddBoolToObject(root, "auto_tag", metadata.auto_tag);
+    cJSON_AddStringToObject(root, "title", metadata.title.c_str());
+    cJSON_AddStringToObject(root, "due_local", metadata.due_local.c_str());
 
     char* raw = cJSON_PrintUnformatted(root);
     std::string json = raw != nullptr ? raw : "";
@@ -386,6 +389,16 @@ bool ParseMetadata(const std::string& json, ArchiveMetadata* metadata)
     if (cJSON_IsString(last_transcription_error) &&
         last_transcription_error->valuestring != nullptr) {
         parsed.last_transcription_error = last_transcription_error->valuestring;
+    }
+
+    parsed.auto_tag = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(root, "auto_tag"));
+    cJSON* title = cJSON_GetObjectItemCaseSensitive(root, "title");
+    if (cJSON_IsString(title) && title->valuestring != nullptr) {
+        parsed.title = title->valuestring;
+    }
+    cJSON* due_local = cJSON_GetObjectItemCaseSensitive(root, "due_local");
+    if (cJSON_IsString(due_local) && due_local->valuestring != nullptr) {
+        parsed.due_local = due_local->valuestring;
     }
 
     cJSON* topic_ids = cJSON_GetObjectItemCaseSensitive(root, "topic_ids");
@@ -508,6 +521,7 @@ esp_err_t SaveClipOnMountedFilesystem(const char* mount_point, void* context)
     metadata.has_transcript = false;
     metadata.pending_transcription = save->options.pending_transcription;
     metadata.tag = save->options.tag;
+    metadata.auto_tag = save->options.auto_tag;
 
     result.clip_saved = WriteClipWav(result.recording_path, *save->clip);
     if (!result.clip_saved) {
@@ -853,6 +867,8 @@ struct MutateContext {
     std::string transcription_error = {};
     bool set_topic_ids = false;
     std::vector<std::string> topic_ids = {};
+    bool set_organization = false;
+    Organization organization = {};
     bool applied = false;
 };
 
@@ -900,6 +916,20 @@ esp_err_t MutateMetadataOnMountedFilesystem(const char* mount_point, void* conte
     }
     if (mutate->set_tag) {
         metadata.tag = mutate->tag;
+    }
+    if (mutate->set_organization) {
+        if (metadata.auto_tag) {
+            if (mutate->organization.has_tag) {
+                metadata.tag = mutate->organization.tag;
+            }
+            metadata.auto_tag = false;
+        }
+        if (!mutate->organization.title.empty()) {
+            metadata.title = mutate->organization.title;
+        }
+        if (!mutate->organization.due_local.empty()) {
+            metadata.due_local = mutate->organization.due_local;
+        }
     }
     if (mutate->set_pending_transcription) {
         metadata.pending_transcription = mutate->pending_transcription;
@@ -1602,6 +1632,43 @@ bool UpdateRecordingTag(const std::string& recording_id, RecordingTag tag)
     (void)storage_service::RunWithMountedFilesystem(MutateMetadataOnMountedFilesystem, &context);
     if (context.applied) {
         // Re-aggregate so the tag move (e.g. Note -> Task) is reflected in the dashboard counts.
+        (void)Refresh();
+    }
+    return context.applied;
+}
+
+Organization OrganizationFromSuggestion(const std::string& suggested_tag,
+                                        const std::string& title,
+                                        const std::string& due_local)
+{
+    Organization organization = {};
+    organization.title = title;
+    organization.due_local = due_local;
+    organization.has_tag = true;
+    if (suggested_tag == "task") {
+        organization.tag = RecordingTag::kTask;
+    } else if (suggested_tag == "idea") {
+        organization.tag = RecordingTag::kIdea;
+    } else if (suggested_tag == "note") {
+        organization.tag = RecordingTag::kNote;
+    } else {
+        organization.has_tag = false;
+    }
+    return organization;
+}
+
+bool ApplyOrganization(const std::string& recording_id, const Organization& organization)
+{
+    if (recording_id.empty()) {
+        return false;
+    }
+    MutateContext context = {};
+    context.recording_id = recording_id.c_str();
+    context.set_organization = true;
+    context.organization = organization;
+    (void)storage_service::RunWithMountedFilesystem(MutateMetadataOnMountedFilesystem, &context);
+    if (context.applied) {
+        // The type may have moved (e.g. Note -> Task): re-aggregate the dashboard counts.
         (void)Refresh();
     }
     return context.applied;
