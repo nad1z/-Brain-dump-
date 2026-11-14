@@ -8,6 +8,18 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-14
+
+### Fixed
+
+- **Israel timezone.** The timezone list had no entry for Israel, so the
+  clock could only be set to UTC or a European zone, which read two hours
+  off once the device synced over Wi-Fi. Israel is now in the list with
+  Israel's own daylight-saving dates (`IST-2IDT,M3.4.4/26,M10.5.0`), and
+  `Asia/Jerusalem` maps to it.
+
+## [1.4.0] - 2026-11-14
+
 ### Changed
 
 - **Renamed to Brain Dump.** The boot splash shows a Brain Dump mark and
@@ -26,11 +38,17 @@ via `git log`, not backfilled here.
   picked by hand is never overridden. Title and due date are stored in the
   recording's metadata (`title`, `due_local`) for the upcoming reminders
   and calendar work; they are not shown on the device yet.
+
 - **Reminders on the lock screen.** Pending Tasks that have a due date are
   listed first on the lock screen, soonest first, labelled "Today 09:30",
   "Tomorrow", "Overdue" or the date.
-- Firmware updates are refused when the battery is below 30% and the
-  device is not plugged in.
+
+- **Low-battery guard for updates.** Firmware updates are refused when the
+  battery is below 30% and the device is not plugged in.
+
+## [1.3.0] - 2026-11-14
+
+### Added
 
 - **Hebrew on screen.** Transcripts, list previews, summaries, lock-screen
   to-dos and Books now draw Hebrew right to left (Heebo glyphs for the
@@ -39,21 +57,31 @@ via `git log`, not backfilled here.
   same fast path as before. The transcription prompt now says not to
   translate, and summaries are requested in the source language.
 
+## [1.2.0] - 2026-11-14
+
+### Added
+
 - **Firmware updates over Wi-Fi.** The setup web page has a new Firmware
   Update section: it shows the installed version and installs an uploaded
   update file into the spare firmware slot, then restarts the device. Files
   that aren't a Chroninkle firmware image, or that fail verification, are
   refused without changing anything (new `firmware_update_service`
   component; `POST /api/update`, `GET /api/runtime/update`).
+
 - **Tests.** 38 host tests (`tests/host/`) cover the 24-hour clock, Hebrew
   decoding/ordering/wrapping/alignment, the model-reply parser behind Auto
   filing, and reminder due labels. They run on a computer and in CI and are
   not compiled into the firmware.
+
 - **Automatic builds.** GitHub Actions now compiles the firmware on every
   push and attaches the update file and a full USB-flash image, plus PNG
   previews of device screens rendered on a computer (`tools/preview/`).
 
-- A **24-hour clock** option. On the Time page the AM/PM button now cycles
+## [1.1.0] - 2026-11-14
+
+### Added
+
+- **24-hour clock.** On the Time page the AM/PM button now cycles
   AM, PM and 24H; saving with 24H selected shows the status bar clock and
   every recording's time as `HH:MM` with no AM/PM. The choice is stored on
   the device (`timezone` NVS namespace, `hour24`) and is also readable and
