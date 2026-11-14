@@ -16,6 +16,10 @@ idf_component_register(SRCS "onboarding_page_runtime.cpp" "onboarding_page_inter
                             "settings_about_page_runtime.cpp"
                             "settings_about_page_interactions.cpp"
                             "settings_about_page_coordinator.cpp"
+                            "settings_changelog_page_runtime.cpp"
+                            "settings_changelog_page_interactions.cpp"
+                            "settings_changelog_page_coordinator.cpp"
+                            "changelog_text.cpp"
                             "settings_todos_page_runtime.cpp"
                             "settings_todos_page_interactions.cpp"
                             "settings_todos_page_coordinator.cpp"
@@ -34,6 +38,8 @@ idf_component_register(SRCS "onboarding_page_runtime.cpp" "onboarding_page_inter
                             "book_reader_page_runtime.cpp"
                             "book_reader_page_coordinator.cpp"
                        INCLUDE_DIRS "."
+                       # Settings > Changelog shows the release notes straight from CHANGELOG.md.
+                       EMBED_TXTFILES "${PROJECT_DIR}/CHANGELOG.md"
                        REQUIRES app_state_service app_update axp2101 board button_service display_service
                                 feedback_service firmware_update_service
                                 device_sleep_service epaper_ui esp_driver_gpio

@@ -18,6 +18,7 @@ std::atomic<bool> s_pending_show_storage = false;
 std::atomic<bool> s_pending_show_todos = false;
 std::atomic<bool> s_pending_show_topics = false;
 std::atomic<bool> s_pending_show_about = false;
+std::atomic<bool> s_pending_show_changelog = false;
 
 footer_runtime::FooterFocusItem FooterItemForSelectedIndex(int selected_index)
 {
@@ -228,6 +229,16 @@ void RequestShowAbout()
 bool ConsumePendingShowAbout()
 {
     return s_pending_show_about.exchange(false, std::memory_order_relaxed);
+}
+
+void RequestShowChangelog()
+{
+    s_pending_show_changelog.store(true, std::memory_order_relaxed);
+}
+
+bool ConsumePendingShowChangelog()
+{
+    return s_pending_show_changelog.exchange(false, std::memory_order_relaxed);
 }
 
 }  // namespace settings_page_runtime

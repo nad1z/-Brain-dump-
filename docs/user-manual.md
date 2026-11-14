@@ -317,6 +317,7 @@ opening its own page, plus one action below them:
 - **Storage** — SD card status and management.
 - **Todos** — todo archiving.
 - **Topics** — create, rename, and delete topics.
+- **Changelog** — what's new: every Brain Dump release and its changes.
 - **About** — firmware version and acknowledgments.
 - **Manual** — replays the first-time onboarding carousel. This one isn't
   a heading — it's a direct action, since there's nothing to configure on
@@ -408,6 +409,17 @@ active list before auto-archiving (see [Archiving completed
 Todos](#archiving-completed-todos)). Choices are 7, 14, 30, 60, or 90
 days, or **Never** to turn off automatic archiving entirely (you can
 still archive individual items manually). Default is 7 days.
+
+### Changelog
+
+The release notes for every Brain Dump version since it split off from
+Chroninkle, newest first: each version's number and date, then what was
+added, changed and fixed, one line per change. The version installed on
+your device is shown under the title.
+
+Select the notes and tilt the rocker to page through them a screenful at a
+time; tap Record (or press the rocker in again) to stop scrolling. **Back**
+returns to Settings.
 
 ### About
 

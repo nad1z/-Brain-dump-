@@ -32,6 +32,8 @@ void RequestShowTopics();
 bool ConsumePendingShowTopics();
 void RequestShowAbout();
 bool ConsumePendingShowAbout();
+void RequestShowChangelog();
+bool ConsumePendingShowChangelog();
 
 }  // namespace settings_page_runtime
 

@@ -34,6 +34,7 @@ g++ -std=c++20 -O1 -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-ini
     "$root"/components/page_navigation/*.cpp \
     "$root/components/gemini_service/organized_transcript.cpp" \
     "$root/main/timeline_format.cpp" \
+    "$root/main/changelog_text.cpp" \
     "$root/main/time_page_coordinator.cpp" \
     -lcjson -o "$out/host_tests"
 

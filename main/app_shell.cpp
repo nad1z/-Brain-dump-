@@ -42,6 +42,7 @@
 #include "sdkconfig.h"
 #include "settings_page_runtime.h"
 #include "settings_about_page_runtime.h"
+#include "settings_changelog_page_runtime.h"
 #include "settings_storage_page_runtime.h"
 #include "settings_todos_page_runtime.h"
 #include "settings_topics_page_runtime.h"
@@ -356,6 +357,28 @@ esp_err_t ShowSettingsAboutScreen(display_service::RefreshMode refresh_mode)
                                              refresh_mode, "show_settings_about_screen");
 }
 
+esp_err_t ShowSettingsChangelogScreen(display_service::RefreshMode refresh_mode)
+{
+    SyncStatusBarState("show_settings_changelog_screen");
+    page_input_runtime::ResetFocusForScreen(display_service::ScreenId::kSettingsChangelog);
+    footer_runtime::SetLayoutState(
+        FooterLayoutForScreen(display_service::ScreenId::kSettingsChangelog));
+    footer_runtime::SetProjectionState(page_input_runtime::BuildFooterProjectionForScreen(
+        display_service::ScreenId::kSettingsChangelog));
+    const esp_err_t footer_err = footer_runtime::UpdateDisplayState();
+    if (footer_err != ESP_OK && footer_err != ESP_ERR_INVALID_STATE) {
+        ESP_LOGW(kTag, "Footer sync before settings changelog screen failed: %s",
+                 esp_err_to_name(footer_err));
+    }
+    const esp_err_t changelog_err = settings_changelog_page_runtime::UpdateDisplayState();
+    if (changelog_err != ESP_OK && changelog_err != ESP_ERR_INVALID_STATE) {
+        ESP_LOGW(kTag, "Settings about page sync before show failed: %s",
+                 esp_err_to_name(changelog_err));
+    }
+    return display_service::SetCurrentScreen(display_service::ScreenId::kSettingsChangelog,
+                                             refresh_mode, "show_settings_changelog_screen");
+}
+
 // Polls the deferred storage/todos/topics/about-heading requests from the Settings hub (set by
 // page_input_runtime's show_storage/show_todos/show_topics/show_about callbacks) -- deferred so
 // the screen change happens after input dispatch, not mid-dispatch, same reasoning as
@@ -380,6 +403,13 @@ void ShowSettingsSubPageIfRequested()
         const esp_err_t err = ShowSettingsTopicsScreen(display_service::RefreshMode::kPartial);
         if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
             ESP_LOGW(kTag, "Show settings topics screen failed: %s", esp_err_to_name(err));
+        }
+        return;
+    }
+    if (settings_page_runtime::ConsumePendingShowChangelog()) {
+        const esp_err_t err = ShowSettingsChangelogScreen(display_service::RefreshMode::kPartial);
+        if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+            ESP_LOGW(kTag, "Show settings changelog screen failed: %s", esp_err_to_name(err));
         }
         return;
     }

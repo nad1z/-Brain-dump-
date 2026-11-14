@@ -8,6 +8,16 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-14
+
+### Added
+
+- **Changelog in Settings.** A new Settings > Changelog page, just above
+  About, lists every Brain Dump release since the fork from Chroninkle
+  1.0.0 with its date and its added, changed and fixed items. It is built
+  into the firmware from this file (`CHANGELOG.md`, embedded at build time),
+  so it always matches the installed version.
+
 ## [1.8.0] - 2026-11-14
 
 ### Added

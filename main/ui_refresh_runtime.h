@@ -29,6 +29,7 @@ enum class SurfaceKey {
     kOnboardingPage,
     kBookListPage,
     kBookReaderPage,
+    kSettingsChangelogPage,
 };
 
 using ApplyCallback = esp_err_t (*)();

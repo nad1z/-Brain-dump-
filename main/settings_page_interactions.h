@@ -18,6 +18,7 @@ enum class ActivateIntent : uint8_t {
     kShowTodos,
     kShowTopics,
     kShowAbout,
+    kShowChangelog,
     kShowOnboarding,
 };
 
@@ -37,6 +38,7 @@ struct ActivateCallbacks {
     std::function<void()> show_todos;
     std::function<void()> show_topics;
     std::function<void()> show_about;
+    std::function<void()> show_changelog;
     std::function<void()> show_onboarding;
 };
 
