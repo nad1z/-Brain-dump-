@@ -119,21 +119,6 @@ void ButtonEventCallback(void* button_handle, void* user_data)
         event_info.event = app_event;
         event_info.pressed_ms = pressed_ms;
         s_event_handler(event_info, s_event_handler_context);
-
-        // iot_button only reports a click when the button is released within kShortPressMs,
-        // and a long press after long_press_ms; a release in between produced nothing, so a
-        // slightly slow Back or Select tap was silently dropped. Report it as a click. Only
-        // for ACTION (Back/Record) and FN (Select): UP/DOWN act on press-down already.
-        const bool click_button =
-            context->id == ButtonId::kAction || context->id == ButtonId::kFunction;
-        if (event == BUTTON_PRESS_UP && click_button && pressed_ms >= kShortPressMs &&
-            pressed_ms < context->long_press_ms) {
-            ButtonEventInfo click_info = event_info;
-            click_info.event = ButtonEvent::kSingleClick;
-            ESP_LOGI(kTag, "%s slow tap (%lu ms) reported as SINGLE_CLICK", context->label,
-                     static_cast<unsigned long>(pressed_ms));
-            s_event_handler(click_info, s_event_handler_context);
-        }
     }
 }
 

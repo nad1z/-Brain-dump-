@@ -50,9 +50,6 @@ A few things worth knowing up front:
   backs out of whatever you're currently inside. Press and *hold* it, and
   it starts recording instead. You don't need to reach for a different
   control to back out of a list versus to record.
-- **Taps don't need to be quick.** A press of Select or Back counts as long
-  as you let go before half a second; only holding past that becomes a hold
-  (recording, or the rocker shortcut).
 - **Holding PWR for a full 6 seconds forces the power off**, no matter what
   the screen is doing. This is a hardware failsafe, not something you
   should need in normal use.

@@ -8,6 +8,16 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-11-14
+
+### Fixed
+
+- **Presses counted twice.** 1.8.0 reported a Select or Back press held
+  longer than 0.18 seconds as an extra tap, on the belief that the button
+  library ignored such presses; it does not, so ordinary presses acted
+  twice: the Access Point toggle (and any other switch) flipped on and
+  straight back off, and menus could skip ahead. The extra tap is removed.
+
 ## [1.9.1] - 2026-11-14
 
 ### Fixed
