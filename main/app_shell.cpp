@@ -1683,6 +1683,22 @@ void HandleDispatchedButtonEvent(const button_service::ButtonEventInfo& event)
         }
     }
 
+    // Double-press the rocker (Select) from any screen: straight to Home. Overlays (menus,
+    // the keyboard) consumed their own events above, so this only runs on a plain page.
+    if (event.button == button_service::ButtonId::kFunction &&
+        event.event == button_service::ButtonEvent::kDoubleClick) {
+        const display_service::ScreenId screen = display_service::GetCurrentScreen();
+        if (screen != display_service::ScreenId::kHome &&
+            screen != display_service::ScreenId::kOnboarding &&
+            screen != display_service::ScreenId::kLockScreen) {
+            const app_interaction::InputResult home_result =
+                HandleFooterActivate(footer_runtime::FooterFocusItem::kHome, nullptr);
+            PlayInteractionFeedback(home_result);
+            FlushOverlayFeedback();
+            return;
+        }
+    }
+
     const page_input_runtime::ButtonResult page_button_result =
         page_input_runtime::HandleButtonEventForCurrentScreen(event);
     if (page_button_result.handled) {

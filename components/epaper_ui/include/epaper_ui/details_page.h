@@ -29,6 +29,11 @@ struct DetailsPageState {
     bool operator==(const DetailsPageState& other) const = default;
 };
 
+// Scroll step (percent) that pages the transcript by one screenful; see
+// ScrollContainerPageStepPercent.
+int DetailsScrollPageStepPercent(int portrait_width,
+                                 int portrait_height,
+                                 const DetailsPageState& state);
 bool HitTestDetailsScrollContainer(int portrait_width,
                                    int portrait_height,
                                    const DetailsPageState& state,

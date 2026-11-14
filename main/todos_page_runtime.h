@@ -52,6 +52,10 @@ void SetEntryFollowUpState(const std::string& recording_id, bool follow_up,
                            bool follow_up_completed);
 void SetEntryChecked(const std::string& recording_id, bool checked);
 
+// Holding the rocker on a row marks the selected todo done (or not done) without opening its actions menu.
+// Returns false when no row is selected (a day header or a control has focus).
+bool RunQuickAction();
+
 }  // namespace todos_page_runtime
 
 #endif  // TODOS_PAGE_RUNTIME_H_

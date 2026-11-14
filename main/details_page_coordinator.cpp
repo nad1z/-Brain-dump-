@@ -9,7 +9,6 @@ namespace {
 using recording_archive_service::RecordingEntry;
 using page_navigation::NavigationItemRole;
 
-constexpr int kScrollStepPercent = 10;
 constexpr const char* kNoTranscriptMessage = "No transcript available.";
 
 }  // namespace
@@ -94,7 +93,7 @@ bool DetailsPageCoordinator::MoveFocus(int delta)
     if (scroll_container_active_) {
         const shared_page_interactions::ScrollStepResult step =
             shared_page_interactions::StepScrollPercent(scroll_position_percent_, delta,
-                                                         kScrollStepPercent);
+                                                         scroll_step_percent_);
         if (!step.changed) {
             return false;
         }

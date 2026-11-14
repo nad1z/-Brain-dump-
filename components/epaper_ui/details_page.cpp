@@ -94,6 +94,16 @@ Layout BuildLayout(int portrait_width, int portrait_height, bool show_transcribe
 
 }  // namespace
 
+int DetailsScrollPageStepPercent(int portrait_width,
+                                 int portrait_height,
+                                 const DetailsPageState& state)
+{
+    const Layout layout = BuildLayout(portrait_width, portrait_height, state.show_transcribe_button);
+    return ScrollContainerPageStepPercent(layout.scroll.x, layout.scroll.y, state.scroll_container,
+                                          ScrollStyle(layout.scroll.width,
+                                                      layout.scroll_panel_height));
+}
+
 bool HitTestDetailsScrollContainer(int portrait_width,
                                    int portrait_height,
                                    const DetailsPageState& state,

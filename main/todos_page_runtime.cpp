@@ -1,4 +1,5 @@
 #include "todos_page_runtime.h"
+#include "project_assets.h"
 
 #include <climits>
 #include <mutex>
@@ -369,6 +370,35 @@ std::string ConsumePendingViewDetails()
     std::string id;
     id.swap(s_pending_view_details_id);
     return id;
+}
+
+
+bool RunQuickAction()
+{
+    std::string recording_id;
+    bool completed = false;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        const TodosPageCoordinator::TimelineEntry* entry = s_coordinator.SelectedEntry();
+        if (entry == nullptr) {
+            return false;
+        }
+        recording_id = entry->recording_id;
+        completed = entry->completed;
+    }
+    // Same optimistic toggle as the actions menu's Complete / Mark incomplete.
+    SetEntryChecked(recording_id, !completed);
+    const bool saved = recording_archive_service::MarkRecordingCompleted(recording_id, !completed);
+    if (!saved) {
+        SetEntryChecked(recording_id, completed);
+    }
+    epaper_ui::ToastState toast = {};
+    toast.visible = true;
+    toast.body_text = !saved ? "Couldn't update the todo"
+                             : (!completed ? "Marked done" : "Marked not done");
+    toast.leading_icon = project_assets::GetIcon(EmbeddedIconId::kCheck);
+    (void)overlay_runtime::ShowToastForDuration(toast, 1500);
+    return true;
 }
 
 }  // namespace todos_page_runtime

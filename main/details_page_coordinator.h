@@ -31,6 +31,9 @@ public:
         const std::vector<recording_archive_service::RecordingEntry>& recordings);
 
     bool MoveFocus(int delta);
+    // How far one tilt scrolls the entered transcript, in percent (set by the runtime from the
+    // laid-out page so one tilt is one screenful).
+    void SetScrollStepPercent(int percent) { scroll_step_percent_ = percent; }
     bool SetFocusIndex(int index);
     bool IsRoleFocused(page_navigation::NavigationItemRole role) const;
     bool EnterScrollContainer();
@@ -66,6 +69,7 @@ private:
     page_navigation::RovingFocus focus_{navigation_model_.item_count, 0};
     bool scroll_container_active_ = false;
     int scroll_position_percent_ = 0;
+    int scroll_step_percent_ = 10;
     std::string pending_recording_id_ = {};
     DetailsPageSource pending_source_page_ = DetailsPageSource::kUnknown;
     std::string recording_id_ = {};

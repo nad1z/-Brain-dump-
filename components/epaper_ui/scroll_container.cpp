@@ -127,6 +127,28 @@ bool ScrollContainerHasOverflow(int origin_x,
     return total > VisibleLineCapacity(viewport, style);
 }
 
+int ScrollContainerPageStepPercent(int origin_x,
+                                   int origin_y,
+                                   const ScrollContainerState& state,
+                                   const ScrollContainerStyle& style)
+{
+    const UiRect panel = ScrollContainerPanelBounds(origin_x, origin_y, style);
+    const UiRect viewport = ContentViewport(panel, style);
+    if (viewport.width <= 0 || state.content_text.empty()) {
+        return 100;
+    }
+    const int total = static_cast<int>(
+        BuildWrappedLines(state.content_text, style.text_role, viewport.width).size());
+    const int capacity = VisibleLineCapacity(viewport, style);
+    const int max_offset = total - capacity;
+    if (max_offset <= 0) {
+        return 100;
+    }
+    const int step_lines = std::max(1, capacity - 1);
+    // Round down so a step never skips a line the reader has not seen.
+    return std::clamp((step_lines * 100) / max_offset, 1, 100);
+}
+
 void DrawScrollContainer(uint8_t* framebuffer,
                          int raw_width,
                          int raw_height,

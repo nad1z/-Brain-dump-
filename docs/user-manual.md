@@ -7,9 +7,7 @@ it, and Brain Dump keeps it organized — transcribed, summarized, and sorted
 into Notes, Todos, and Follow-ups — on a screen that sips power and stays
 legible even when it's "asleep."
 
-This manual describes the device as it actually behaves today. A couple of
-spots in the on-device onboarding carousel describe older button gestures
-that no longer apply — this manual is the accurate reference. Brain Dump is
+This manual describes the device as it actually behaves today. Brain Dump is
 a fork of **Chroninkle**, which was itself renamed from **Followup**; a
 device still running one of those firmwares broadcasts its Wi-Fi setup
 hotspot under the older name until it's updated. Brain Dump's hotspot is
@@ -40,7 +38,7 @@ is driven by these.
 | Control | Quick action | Press and hold |
 |---|---|---|
 | **Record button** | **Back** — exits whatever you're currently inside (an open list, a scroll view, a switch) | **Record** a thought (see below) |
-| **Rocker** (tilt up / tilt down / press in) | Tilt up or down to move the selection; press the rocker straight in (**Select**) to select/confirm | Hold a tilt to keep moving in that direction |
+| **Rocker** (tilt up / tilt down / press in) | Tilt up or down to move the selection; press the rocker straight in (**Select**) to select/confirm. **Press it in twice quickly** to jump to the Home screen from anywhere. | Hold a tilt to keep moving in that direction. **Hold the rocker in** on a Todo to mark it done (or not done), or on a Note or Follow-up to play its recording. |
 | **PWR** | Short press: **lock / unlock** the screen | Hold ~1 second: open a **shut down?** confirmation |
 
 A few things worth knowing up front:
@@ -52,6 +50,9 @@ A few things worth knowing up front:
   backs out of whatever you're currently inside. Press and *hold* it, and
   it starts recording instead. You don't need to reach for a different
   control to back out of a list versus to record.
+- **Taps don't need to be quick.** A press of Select or Back counts as long
+  as you let go before half a second; only holding past that becomes a hold
+  (recording, or the rocker shortcut).
 - **Holding PWR for a full 6 seconds forces the power off**, no matter what
   the screen is doing. This is a hardware failsafe, not something you
   should need in normal use.
@@ -201,6 +202,11 @@ screen:
 | Archive now *(only once completed)* | — | ✓ | — |
 | Delete | ✓ | ✓ | ✓ |
 
+**Shortcut:** instead of opening the menu, **hold the rocker in** on a
+recording. On **Todos** that marks it done — or, if it's already done, not
+done — and a short message confirms it. On **Notes** and **Follow-up** it
+plays the recording straight away.
+
 A couple of notes on these:
 
 - **Turn to task** (on Notes) is how you promote a Note or Idea into a
@@ -233,7 +239,8 @@ Current — but the deleted audio does not come back.
 
 "View details" opens the full transcript for a recording, scrollable if
 it's long — select the scroll area and tilt the rocker to move through it
-in 10% steps. Below that:
+a screenful at a time (the last line of the previous screen stays at the
+top, so you never lose your place). Below that:
 
 - **Edit topics** opens a checklist of your [topics](#topics) — select
   one to check or uncheck it, then select **Done** to save. Multiple

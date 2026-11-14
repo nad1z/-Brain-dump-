@@ -41,6 +41,10 @@ bool HandleItemActionSelection(int selected_index);
 // Details screen after input dispatch returns). Empty when none is pending.
 std::string ConsumePendingViewDetails();
 
+// Holding the rocker on a row plays the selected recording without opening its actions menu.
+// Returns false when no row is selected (a day header or a control has focus).
+bool RunQuickAction();
+
 }  // namespace follow_up_page_runtime
 
 #endif  // FOLLOW_UP_PAGE_RUNTIME_H_

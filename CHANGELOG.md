@@ -8,6 +8,30 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-14
+
+### Added
+
+- **Press the rocker twice to go Home** from any screen (not while a menu
+  or the keyboard is open).
+- **Hold the rocker on a row for a shortcut.** On Todos it marks the task
+  done or not done; on Notes and Follow-up it plays the recording — no
+  actions menu needed.
+
+### Changed
+
+- **Transcripts scroll a screenful at a time.** The Details page used fixed
+  10% steps, which skipped text in long transcripts; each tilt now moves
+  exactly one screen, keeping the last line in view.
+- Onboarding text: "Hold to capture" (recording needs a hold, not a tap),
+  and the rocker and power slides mention the new shortcuts and the PWR
+  lock press.
+
+### Fixed
+
+- **Slow taps were ignored.** A Select or Back press released between
+  0.18 and 0.5 seconds produced no action at all; it now counts as a tap.
+
 ## [1.7.0] - 2026-11-14
 
 ### Added

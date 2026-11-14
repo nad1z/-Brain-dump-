@@ -20,16 +20,17 @@ constexpr std::array<Slide, 6> kSlides = {{
     {"Welcome to Brain Dump",
      "Your pocket voice notebook. Capture thoughts out loud and let Brain Dump keep them organized.",
      EmbeddedImageId::kSlide1},
-    {"Capture in a tap",
+    {"Hold to capture",
      "Hold Record to capture a note, idea, or task -- saved straight to the SD card. A quick "
      "press is Back -- it exits whatever you're inside.",
      EmbeddedImageId::kSlide2},
     {"Navigate with the rocker",
-     "Tilt the rocker up or down to move your selection; press it in to select.",
+     "Tilt the rocker up or down to move; press it in to select. Hold it in on a todo or "
+     "note for a shortcut, or press it twice to jump Home.",
      EmbeddedImageId::kSlide3},
     {"Sleep & power",
-     "The device sleeps when inactive. Hold PWR for about a second to open a shut-down "
-     "confirmation.",
+     "The device sleeps when inactive. A short press of PWR locks the screen; hold it for "
+     "about a second to open a shut-down confirmation.",
      EmbeddedImageId::kSlide4},
     {"Summaries with Gemini",
      "Connect Gemini and let Brain Dump transcribe your recordings and summarize your day for you.",

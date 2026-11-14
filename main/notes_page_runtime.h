@@ -56,6 +56,10 @@ SelectedEntrySnapshot GetSelectedEntrySnapshot();
 void SetEntryFollowUpState(const std::string& recording_id, bool follow_up,
                            bool follow_up_completed);
 
+// Holding the rocker on a row plays the selected recording without opening its actions menu.
+// Returns false when no row is selected (a day header or a control has focus).
+bool RunQuickAction();
+
 }  // namespace notes_page_runtime
 
 #endif  // NOTES_PAGE_RUNTIME_H_

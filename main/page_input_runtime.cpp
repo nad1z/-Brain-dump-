@@ -1674,8 +1674,12 @@ ButtonResult HandleNotesButtonEvent(const button_service::ButtonEventInfo& event
             return ApplyNotesActivateResult(notes_page_runtime::ActivateFocusedItem());
         case button_service::ButtonEvent::kPressDown:
         case button_service::ButtonEvent::kPressUp:
-        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressStart:
+            // Hold the rocker on a row: its quick action (see RunQuickAction).
+            result.handled = true;
+            result.interaction_result = MakeConsumedResult(notes_page_runtime::RunQuickAction());
+            return result;
+        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressUp:
             result.handled = true;
             result.interaction_result.consumed = true;
@@ -1809,8 +1813,12 @@ ButtonResult HandleTodosButtonEvent(const button_service::ButtonEventInfo& event
             return ApplyTodosActivateResult(todos_page_runtime::ActivateFocusedItem());
         case button_service::ButtonEvent::kPressDown:
         case button_service::ButtonEvent::kPressUp:
-        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressStart:
+            // Hold the rocker on a row: its quick action (see RunQuickAction).
+            result.handled = true;
+            result.interaction_result = MakeConsumedResult(todos_page_runtime::RunQuickAction());
+            return result;
+        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressUp:
             result.handled = true;
             result.interaction_result.consumed = true;
@@ -1942,8 +1950,12 @@ ButtonResult HandleFollowUpButtonEvent(const button_service::ButtonEventInfo& ev
             return ApplyFollowUpActivateResult(follow_up_page_runtime::ActivateFocusedItem());
         case button_service::ButtonEvent::kPressDown:
         case button_service::ButtonEvent::kPressUp:
-        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressStart:
+            // Hold the rocker on a row: its quick action (see RunQuickAction).
+            result.handled = true;
+            result.interaction_result = MakeConsumedResult(follow_up_page_runtime::RunQuickAction());
+            return result;
+        case button_service::ButtonEvent::kPressRepeat:
         case button_service::ButtonEvent::kLongPressUp:
             result.handled = true;
             result.interaction_result.consumed = true;

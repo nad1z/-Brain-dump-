@@ -157,7 +157,10 @@ bool FooterProjectionChangedForFocusIndexes(int old_focus_index, int new_focus_i
 esp_err_t UpdateDisplayState()
 {
     std::lock_guard<std::mutex> lock(s_mutex);
-    return display_service::SetDetailsPageState(BuildStateLocked());
+    const epaper_ui::DetailsPageState state = BuildStateLocked();
+    s_coordinator.SetScrollStepPercent(epaper_ui::DetailsScrollPageStepPercent(
+        display_service::PortraitWidth(), display_service::PortraitHeight(), state));
+    return display_service::SetDetailsPageState(state);
 }
 
 esp_err_t UpdateDisplayStateAndRequestRefresh(display_service::RefreshMode refresh_mode)

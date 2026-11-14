@@ -1,4 +1,5 @@
 #include "notes_page_runtime.h"
+#include "project_assets.h"
 
 #include <climits>
 #include <mutex>
@@ -336,6 +337,31 @@ std::string ConsumePendingViewDetails()
     std::string id;
     id.swap(s_pending_view_details_id);
     return id;
+}
+
+
+bool RunQuickAction()
+{
+    std::string recording_path;
+    bool has_audio = false;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        const NotesPageCoordinator::TimelineEntry* entry = s_coordinator.SelectedEntry();
+        if (entry == nullptr) {
+            return false;
+        }
+        recording_path = entry->recording_path;
+        has_audio = entry->has_audio_file;
+    }
+    if (has_audio) {
+        return clip_playback_runtime::PlayFileAsync(recording_path);
+    }
+    epaper_ui::ToastState toast = {};
+    toast.visible = true;
+    toast.body_text = "No recording to play";
+    toast.leading_icon = project_assets::GetIcon(EmbeddedIconId::kAudio);
+    (void)overlay_runtime::ShowToastForDuration(toast, 1500);
+    return true;
 }
 
 }  // namespace notes_page_runtime

@@ -62,6 +62,12 @@ bool ScrollContainerHasOverflow(int origin_x,
                                 int origin_y,
                                 const ScrollContainerState& state,
                                 const ScrollContainerStyle& style);
+// The scroll_position_percent step that moves the text by one screenful, keeping one line
+// of the previous screen in view. 100 when everything fits.
+int ScrollContainerPageStepPercent(int origin_x,
+                                   int origin_y,
+                                   const ScrollContainerState& state,
+                                   const ScrollContainerStyle& style);
 void DrawScrollContainer(uint8_t* framebuffer,
                          int raw_width,
                          int raw_height,
