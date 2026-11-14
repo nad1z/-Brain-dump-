@@ -33,7 +33,7 @@ jobs:
           idf.py -B build-release -D SDKCONFIG=sdkconfig.release set-target esp32s3
           idf.py -B build-release -D SDKCONFIG=sdkconfig.release build
           # Single image for a first-time USB flash at offset 0x0.
-          idf.py -B build-release -D SDKCONFIG=sdkconfig.release merge-bin -o chroninkle-full.bin
+          idf.py -B build-release -D SDKCONFIG=sdkconfig.release merge-bin -o braindump-full.bin
 
       - name: Collect firmware files
         shell: bash
@@ -41,8 +41,8 @@ jobs:
           version="$(tr -d '[:space:]' < version.txt)"
           mkdir -p dist
           # App image only: this is the file an over-the-air update installs.
-          cp build-release/chroninkle.bin "dist/chroninkle-${version}-update.bin"
-          cp build-release/chroninkle-full.bin "dist/chroninkle-${version}-full-usb-flash.bin"
+          cp build-release/braindump.bin "dist/braindump-${version}-update.bin"
+          cp build-release/braindump-full.bin "dist/braindump-${version}-full-usb-flash.bin"
           ls -l dist
 
       - uses: actions/upload-artifact@v4
@@ -50,6 +50,18 @@ jobs:
           name: firmware
           path: dist/
           if-no-files-found: error
+
+  tests:
+    name: Host tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests on the build machine (not part of the firmware)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libcjson-dev
+          tests/host/run.sh
 
   screens:
     name: Screen previews

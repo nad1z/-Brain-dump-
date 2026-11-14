@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import struct
 import subprocess
 import tempfile
@@ -44,6 +45,19 @@ def convert_png_to_bmp(
     fixed_size: int | None = None,
 ) -> Path:
     bmp_path = Path(temp_dir) / f"{asset_path.stem}.bmp"
+    if shutil.which("sips") is None:
+        # Not on macOS: do the same PNG -> 32-bit BMP conversion with Pillow.
+        try:
+            from PIL import Image
+        except ImportError as error:
+            raise AssetGenError(
+                "asset generation needs macOS `sips` or Python Pillow (pip install pillow)"
+            ) from error
+        image = Image.open(asset_path).convert("RGBA")
+        if fixed_size is not None and image.size != (fixed_size, fixed_size):
+            image = image.resize((fixed_size, fixed_size), Image.LANCZOS)
+        image.save(bmp_path, format="BMP")
+        return bmp_path
     command = ["sips"]
     if fixed_size is not None:
         command.extend(["-z", str(fixed_size), str(fixed_size)])

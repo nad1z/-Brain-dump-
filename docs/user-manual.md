@@ -1,17 +1,19 @@
-# Chroninkle User Manual
+# Brain Dump User Manual
 
-![Chroninkle](../assets/logos/chroninkle-logo.png)
+![Brain Dump](../assets/logos/braindump-logo-stacked.png)
 
-Chroninkle is a pocket voice notebook. Press a button, speak your thought, tag
-it, and Chroninkle keeps it organized — transcribed, summarized, and sorted
+Brain Dump is a pocket voice notebook. Press a button, speak your thought, tag
+it, and Brain Dump keeps it organized — transcribed, summarized, and sorted
 into Notes, Todos, and Follow-ups — on a screen that sips power and stays
 legible even when it's "asleep."
 
 This manual describes the device as it actually behaves today. A couple of
 spots in the on-device onboarding carousel describe older button gestures
-that no longer apply — this manual is the accurate reference. Chroninkle was
-renamed from **Followup**; a device already running older firmware still
-broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
+that no longer apply — this manual is the accurate reference. Brain Dump is
+a fork of **Chroninkle**, which was itself renamed from **Followup**; a
+device still running one of those firmwares broadcasts its Wi-Fi setup
+hotspot under the older name until it's updated. Brain Dump's hotspot is
+named `BrainDump-` followed by three pairs of letters and digits.
 
 ## Contents
 
@@ -32,7 +34,7 @@ broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
 
 ## At a glance: the buttons
 
-Chroninkle has three physical controls. There is no touchscreen — everything
+Brain Dump has three physical controls. There is no touchscreen — everything
 is driven by these.
 
 | Control | Quick action | Press and hold |
@@ -59,19 +61,19 @@ A few things worth knowing up front:
 
 ## First-time setup
 
-On first boot, Chroninkle walks you through a short introduction carousel.
+On first boot, Brain Dump walks you through a short introduction carousel.
 Use the **rocker** to move through it (tilt to move, press in to confirm),
 and close it on the final slide. You can replay this carousel any time from
 **Settings → Manual**.
 
-To actually get set up, Chroninkle opens its own WiFi hotspot named
-**`Chroninkle-XXXXXX`** (the last few characters are unique to your device)
+To actually get set up, Brain Dump opens its own WiFi hotspot named
+**`Brain Dump-XXXXXX`** (the last few characters are unique to your device)
 whenever it doesn't have saved WiFi credentials yet. Connect a phone or laptop to
 that hotspot — it's open, no password needed — and your device should
 automatically open a setup page (or visit `http://192.168.4.1` yourself).
 From there you can:
 
-- **Connect Chroninkle to your WiFi** — scan for networks, pick yours, enter
+- **Connect Brain Dump to your WiFi** — scan for networks, pick yours, enter
   the password.
 - **Add your Gemini API key** — this is what powers transcription and
   summaries. Without it, recordings still save to the SD card, they just
@@ -90,17 +92,17 @@ This is the core interaction:
 
 1. **Press and hold the Record button.** You'll hear a start cue.
    Recording actually begins fractionally before the cue finishes, so
-   your first word isn't cut off — and Chroninkle even keeps a rolling
+   your first word isn't cut off — and Brain Dump even keeps a rolling
    one-second buffer while the button is held, so a beat of audio right
    before you "properly" started holding it is still caught.
-2. **Speak.** Recordings are capped at **10 seconds** — Chroninkle is built
+2. **Speak.** Recordings are capped at **10 seconds** — Brain Dump is built
    for quick captures, not long dictation. If you keep holding past 10
    seconds, it stops automatically.
-3. **Release the Record button.** You'll hear a stop cue, and Chroninkle
+3. **Release the Record button.** You'll hear a stop cue, and Brain Dump
    immediately plays your recording back to you.
 4. **Choose a tag**, from a menu with six options:
    - **Auto** — the first choice, so one press of the select button is
-     enough. Chroninkle files the recording for you: when it is
+     enough. Brain Dump files the recording for you: when it is
      transcribed, it is sorted into Note, Task or Idea based on what you
      said ("remind me to call the bank tomorrow" becomes a Task). Until
      the transcript arrives — for example while there's no WiFi — it sits
@@ -111,7 +113,7 @@ This is the core interaction:
      screen — the tag itself is called "Task," even though the screen
      that lists them is called "Todos.")
    - **Idea** — something to mull over later.
-   - **Topic** — doesn't save a note at all. Chroninkle transcribes what
+   - **Topic** — doesn't save a note at all. Brain Dump transcribes what
      you said, distills it into a short name, and adds it as a new
      [topic](#topics) (e.g. hold Record, say "kitchen renovation," pick
      Topic — that project name now exists as a topic you can tag other
@@ -120,7 +122,7 @@ This is the core interaction:
    - **Discard** — throws the recording away. Nothing is saved to the SD
      card if you pick this — that's exactly why the review-then-tag order
      exists: you get to hear it back before deciding.
-5. If you chose Auto, Note, Task, or Idea, and Chroninkle has WiFi and a
+5. If you chose Auto, Note, Task, or Idea, and Brain Dump has WiFi and a
    Gemini key configured, it transcribes the recording in the
    background — you'll see a brief "Transcribing recording..." message,
    then either a transcript being saved or a note that transcription
@@ -128,13 +130,13 @@ This is the core interaction:
    produce its name (see above), and Discard has nothing to transcribe.
 
 **If you're offline when you record**, the clip still saves to the SD
-card — it just gets marked as pending. The moment Chroninkle reconnects to
+card — it just gets marked as pending. The moment Brain Dump reconnects to
 WiFi, it automatically retries every pending recording. A small badge on
 the status bar shows how many are waiting.
 
 ## The Home screen
 
-Home is Chroninkle's dashboard. Near the top you'll see:
+Home is Brain Dump's dashboard. Near the top you'll see:
 
 - A **task tracker** — "`done`/`total` completed" with a progress bar, or
   "No tasks yet" if you haven't tagged anything as a Task.
@@ -201,7 +203,7 @@ it and tilt the rocker to flip between the two views.
 A completed Task doesn't disappear right away — it stays visible (checked
 off) in Current for a while, so you can see what you've gotten done.
 After it's been completed for a configurable number of days (7 by
-default — see [Settings](#settings)), Chroninkle automatically **archives**
+default — see [Settings](#settings)), Brain Dump automatically **archives**
 it: the audio recording is deleted to free up SD card space, but the
 transcript text is kept, and the item moves to the Archived view where you
 can still read it. You can also archive a completed item immediately with
@@ -306,7 +308,7 @@ back to the Home screen, skipping the hub.
 From the top:
 
 1. **WiFi** — toggle WiFi on or off.
-2. **Access Point** — toggle Chroninkle's own setup hotspot on or off.
+2. **Access Point** — toggle Brain Dump's own setup hotspot on or off.
 3. A list of nearby networks — each row indicates whether it's open or
    password-protected, its signal strength, and whether it's the one
    you're currently connected to. Select a network, enter its password if
@@ -335,11 +337,11 @@ the time on each recording — as 24-hour (for example `17:05` instead of
    inserted and mounted).
 2. **Enable OTG** — mounts the SD card as a USB drive on a computer you've
    connected via USB-C, so you can pull files off directly. While this is
-   active, the card is unavailable to Chroninkle itself, and you'll need to
+   active, the card is unavailable to Brain Dump itself, and you'll need to
    explicitly **Disable OTG mode** to get it back (there's no accidental
    way out of this while the cable's connected — that's intentional, so
-   Chroninkle doesn't touch the card while your computer has it mounted).
-3. **Format SD** — erases the SD card completely. Chroninkle asks you to
+   Brain Dump doesn't touch the card while your computer has it mounted).
+3. **Format SD** — erases the SD card completely. Brain Dump asks you to
    confirm ("Formatting the SD card will erase everything on the card") —
    there's no undo once you confirm.
 
@@ -353,7 +355,7 @@ still archive individual items manually). Default is 7 days.
 
 ### About
 
-Shows the installed firmware version and an acknowledgment: Chroninkle
+Shows the installed firmware version and an acknowledgment: Brain Dump
 began as a fork of Followup, created by ALXV Labs.
 
 ### Manage topics
@@ -391,7 +393,7 @@ don't need a USB cable.
 
 1. Get the update file — the one whose name ends in `-update.bin`.
 2. On the device, open **Settings > Network** and turn **Access Point** on.
-3. On your phone or computer, join the Chroninkle hotspot and open the setup
+3. On your phone or computer, join the Brain Dump hotspot and open the setup
    page (`http://192.168.4.1`).
 4. In the **Firmware Update** section, choose the file and press **Install
    Update**. The page shows the installed version and the upload progress.

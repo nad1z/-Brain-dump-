@@ -6,6 +6,7 @@
 namespace epaper_logos {
 
 extern const EmbeddedImageAsset kAlxvLabsLogo;
+extern const EmbeddedImageAsset kBrainDumpLogoStacked;
 extern const EmbeddedImageAsset kChroninkleIcon;
 extern const EmbeddedImageAsset kChroninkleLogo;
 extern const EmbeddedImageAsset kChroninkleLogoStacked;

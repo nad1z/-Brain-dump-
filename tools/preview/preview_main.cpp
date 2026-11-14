@@ -8,6 +8,7 @@
 
 #include "epaper_ui/details_page.h"
 #include "epaper_ui/select_modal.h"
+#include "epaper_ui/splash_screen.h"
 #include "epaper_ui/status_bar.h"
 #include "epaper_ui/time_page.h"
 
@@ -129,6 +130,15 @@ void RenderSaveMenu(const std::string& out_dir, const std::string& name)
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+void RenderSplash(const std::string& out_dir, const std::string& name)
+{
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawSplashScreen(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                                kPortraitHeight);
+    const std::string path = out_dir + "/" + name + ".pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -136,6 +146,7 @@ int main(int argc, char** argv)
     const std::string out_dir = argc > 1 ? argv[1] : ".";
     RenderTimePage(out_dir, "time_page_12h", "05", "PM", "5:05 PM");
     RenderTimePage(out_dir, "time_page_24h", "17", "24H", "17:05");
+    RenderSplash(out_dir, "boot_splash");
     RenderSaveMenu(out_dir, "save_menu");
     RenderDetailsPage(out_dir, "details_english",
                       "Idea for the brain dump device: sync reminders to the calendar, and keep "

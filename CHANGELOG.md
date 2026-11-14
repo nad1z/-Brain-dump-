@@ -8,6 +8,15 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Changed
+
+- **Renamed to Brain Dump.** The boot splash shows a Brain Dump mark and
+  credits Chroninkle, Followup and ALXV Labs under "Based on"; onboarding,
+  the About page, the setup web page and the manual use the new name; the
+  setup hotspot is now `BrainDump-XXXXXX`; the firmware image is
+  `braindump.bin`. Internal identifiers (`CONFIG_CHRONINKLE_*`, namespaces)
+  keep the upstream name.
+
 ### Added
 
 - **Auto filing.** The save menu has a new first choice, **Auto**: the same
@@ -36,6 +45,10 @@ via `git log`, not backfilled here.
   that aren't a Chroninkle firmware image, or that fail verification, are
   refused without changing anything (new `firmware_update_service`
   component; `POST /api/update`, `GET /api/runtime/update`).
+- **Tests.** 38 host tests (`tests/host/`) cover the 24-hour clock, Hebrew
+  decoding/ordering/wrapping/alignment, the model-reply parser behind Auto
+  filing, and reminder due labels. They run on a computer and in CI and are
+  not compiled into the firmware.
 - **Automatic builds.** GitHub Actions now compiles the firmware on every
   push and attaches the update file and a full USB-flash image, plus PNG
   previews of device screens rendered on a computer (`tools/preview/`).

@@ -1,5 +1,7 @@
 #include "gemini_service.h"
 
+#include "organized_transcript.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -1206,46 +1208,6 @@ std::string CurrentLocalTimeForPrompt()
     return buffer;
 }
 
-// Splits the model's JSON reply into transcript + organisation fields. A reply that is not the
-// requested JSON (older model, safety rewrite, plain text) is kept whole as the transcript.
-void ParseOrganizedTranscript(const std::string& reply, TranscriptionResult* result)
-{
-    const size_t open = reply.find('{');
-    const size_t close = reply.rfind('}');
-    cJSON* root = nullptr;
-    if (open != std::string::npos && close != std::string::npos && close > open) {
-        root = cJSON_ParseWithLength(reply.c_str() + open, close - open + 1);
-    }
-    cJSON* transcript = root != nullptr ? cJSON_GetObjectItemCaseSensitive(root, "transcript")
-                                        : nullptr;
-    if (!cJSON_IsString(transcript) || transcript->valuestring == nullptr) {
-        result->transcript = reply;
-        cJSON_Delete(root);
-        return;
-    }
-    result->transcript = transcript->valuestring;
-    const auto read = [root](const char* key) -> std::string {
-        cJSON* item = cJSON_GetObjectItemCaseSensitive(root, key);
-        return (cJSON_IsString(item) && item->valuestring != nullptr) ? item->valuestring : "";
-    };
-    const std::string type = read("type");
-    if (type == "task" || type == "idea" || type == "note") {
-        result->suggested_tag = type;
-    }
-    result->title = read("title");
-    if (result->title.size() > 80) {
-        result->title.clear();  // not a title; do not store a paragraph
-    }
-    const std::string due = read("due");
-    // Accept only the two documented shapes so nothing free-form reaches the metadata file.
-    const bool date_only = due.size() == 10;
-    const bool date_time = due.size() == 16 && due[10] == 'T' && due[13] == ':';
-    if ((date_only || date_time) && due[4] == '-' && due[7] == '-') {
-        result->due_local = due;
-    }
-    cJSON_Delete(root);
-}
-
 std::string BuildTranscriptRequestJson(const std::string& file_uri)
 {
     cJSON* root = cJSON_CreateObject();
@@ -1693,8 +1655,11 @@ TranscriptionResult Transcribe(const recording_service::RecordedClip& clip)
 
     cJSON* root = cJSON_ParseWithLength(http.body.c_str(), http.body.size());
     if (http.status_code >= 200 && http.status_code < 300) {
-        ParseOrganizedTranscript(ExtractCandidateText(root), &result);
-        result.transcript = TrimForLog(result.transcript, 1U << 20);
+        OrganizedTranscript organized = ParseOrganizedTranscript(ExtractCandidateText(root));
+        result.transcript = TrimForLog(std::move(organized.transcript), 1U << 20);
+        result.suggested_tag = std::move(organized.suggested_tag);
+        result.title = std::move(organized.title);
+        result.due_local = std::move(organized.due_local);
         result.success = !result.transcript.empty();
         if (!result.success) {
             result.error_code = "empty_transcript";

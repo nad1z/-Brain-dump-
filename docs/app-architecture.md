@@ -839,7 +839,7 @@ Runtime-persisted settings live in service-owned NVS namespaces:
   deliberately a separate namespace from `recording_archive_service`'s own internal
   `rec_archive`/`counts` cached-counts blob, which isn't a user setting)
 
-The build-time Wi-Fi/time defaults live under `Chroninkle Settings`:
+The build-time Wi-Fi/time defaults live under `Brain Dump Settings`:
 
 - `CONFIG_CHRONINKLE_WIFI_AP_PREFIX`
 - `CONFIG_CHRONINKLE_WIFI_STA_SSID`
@@ -1532,7 +1532,7 @@ Configuration is file-based and should stay reproducible:
 - `sdkconfig` captures the resolved ESP-IDF configuration.
 - `partitions.csv` defines the OTA partition table.
 
-Project-specific Kconfig options live under `Chroninkle Settings`. Auto-sleep
+Project-specific Kconfig options live under `Brain Dump Settings`. Auto-sleep
 currently exposes reproducible build-time defaults for display sleep and light
 sleep timeout seconds; `0` disables the corresponding stage, and a nonzero light
 sleep timeout must be greater than or equal to the display sleep timeout.

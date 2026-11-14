@@ -1,6 +1,14 @@
-# Chroninkle Product Introduction
+# Brain Dump
 
-![Chroninkle](assets/logos/chroninkle-logo.png)
+![Brain Dump](assets/logos/braindump-logo-stacked.png)
+
+Brain Dump is a fork of [Chroninkle](https://github.com/mach1na/chroninkle) (itself a fork of
+ALXV's Followup; see the lineage note further down). It keeps Chroninkle's firmware and adds a
+24-hour clock, Hebrew on screen, automatic filing of recordings, dated reminders on the lock
+screen, and firmware updates over Wi-Fi. The product text below is Chroninkle's original
+introduction and still describes the device; internal identifiers in the code
+(`CONFIG_CHRONINKLE_*`, `chroninkle_task_config`, log tags) keep the upstream name on purpose so
+upstream fixes merge cleanly.
 
 Chroninkle is a place to capture your thoughts — whether it's an idea, a to-do, or just a note. Record what's on your mind at that light-bulb moment, before it slips away, and Chroninkle helps you organize it afterward. With Gemini, your recordings are transcribed automatically, and you can ask for a written summary of your Notes or Todos any time. Everything is stored on your SD card.
 
