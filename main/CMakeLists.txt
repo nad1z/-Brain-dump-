@@ -42,7 +42,7 @@ idf_component_register(SRCS "onboarding_page_runtime.cpp" "onboarding_page_inter
                        EMBED_TXTFILES "${PROJECT_DIR}/CHANGELOG.md"
                        REQUIRES app_state_service app_update axp2101 board button_service display_service
                                 feedback_service firmware_update_service
-                                device_sleep_service epaper_ui esp_driver_gpio
+                                device_sleep_service epaper_ui esp_driver_gpio esp_driver_usb_serial_jtag
                                 esp_hw_support esp_partition gemini_service imu_service power_service
                                 nvs_flash page_navigation playback_service project_assets
                                 recording_archive_service

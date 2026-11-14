@@ -590,6 +590,8 @@ const char* BlockerReasonName(BlockerReason reason)
             return "wifi_access_point";
         case BlockerReason::kTimeSync:
             return "time_sync";
+        case BlockerReason::kUsbHostConnected:
+            return "usb_host_connected";
         default:
             return "unknown";
     }

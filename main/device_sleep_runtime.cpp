@@ -1,5 +1,7 @@
 #include "device_sleep_runtime.h"
 
+#include "driver/usb_serial_jtag.h"
+
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -168,6 +170,16 @@ device_sleep_service::BlockerReason GetAutoSleepBlocker(void*)
 
     if (display_service::IsRefreshInProgress()) {
         return device_sleep_service::BlockerReason::kDisplayRefresh;
+    }
+
+    // Light sleep switches off the ESP32-S3's built-in USB, so a connected computer loses
+    // the board (Windows: "device not functioning") and USB flashing fails until it is
+    // replugged in download mode. While a computer is connected (it sends USB SOF packets; a
+    // charger or power bank does not), hold light sleep off. Only once the display is
+    // already asleep: a blocker resets the idle timer, and the screen should still sleep.
+    if (device_sleep_service::GetSnapshot().runtime.stage != device_sleep_service::Stage::kAwake &&
+        usb_serial_jtag_is_connected()) {
+        return device_sleep_service::BlockerReason::kUsbHostConnected;
     }
 
     return device_sleep_service::BlockerReason::kNone;

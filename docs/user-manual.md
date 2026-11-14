@@ -513,6 +513,12 @@ reads as "resting," not "off" or broken. After about 30 minutes of
 continued inactivity, the device goes into a deeper low-power sleep and
 disconnects WiFi; press the Record button or PWR to wake it back up.
 
+While Brain Dump is plugged into a **computer** by USB, it skips that
+deeper sleep (the screen still sleeps after 3 minutes). The deeper sleep
+switches off the USB connection, so the computer would lose the device and
+installing firmware over the cable would fail. A plain USB charger or power
+bank doesn't count — on those it sleeps as usual.
+
 ## Shutting down and charging
 
 **Shutting down**: hold PWR for about a second. A confirmation appears —

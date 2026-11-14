@@ -8,6 +8,19 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-11-14
+
+### Fixed
+
+- **USB flashing failed after the device sat idle.** After 30 idle minutes
+  the device entered light sleep, which switches off the ESP32-S3's
+  built-in USB: the computer reported the device as not working and
+  flashing failed until it was replugged in download mode. Light sleep is
+  now held off while a computer is connected (it sends USB start-of-frame
+  packets; a charger or power bank does not). The screen still sleeps.
+  Over-the-air updates were never affected: the update page only runs in
+  hotspot mode, which already keeps the device awake.
+
 ## [1.9.0] - 2026-11-14
 
 ### Added

@@ -46,6 +46,10 @@ enum class BlockerReason : uint8_t {
     kStorageWrite,
     kWifiAccessPoint,
     kTimeSync,
+    // A computer is talking to the USB port. Only reported once the display is already asleep,
+    // so the screen still sleeps but light sleep (which stops the chip's USB and so breaks
+    // flashing and the serial log) waits until the cable is unplugged.
+    kUsbHostConnected,
 };
 
 struct Settings {
