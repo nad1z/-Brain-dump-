@@ -134,6 +134,26 @@
               Save
             </ui-button>
         </ui-card>
+
+        <ui-card id="firmwareUpdateCard" title="Firmware Update">
+            <p id="firmwareVersionText" class="form-helper-text">Installed version: …</p>
+
+            <ui-file-upload
+              id="firmwareFileInput"
+              label="Update file"
+              aria-label="Firmware update file"
+              accept=".bin,application/octet-stream"
+              warning-text="Choose the file ending in -update.bin. The device restarts by itself when the update is installed."
+            ></ui-file-upload>
+
+            <ui-button
+              slot="footer"
+              id="firmwareUploadBtn"
+              variant="primary"
+            >
+              Install Update
+            </ui-button>
+        </ui-card>
       </div>
     </main>
 

@@ -4,6 +4,7 @@ import {
   defineBottomSheet,
   defineButton,
   defineCard,
+  defineFileUpload,
   defineIconButton,
   defineInput,
   defineNetworkList,
@@ -22,6 +23,7 @@ import wifiFindIcon from './assets/wifi_find.svg?raw';
 import apiKeyIcon from './assets/api_key.svg?raw';
 import checkIcon from './assets/check.svg?raw';
 import clockIcon from './assets/clock.svg?raw';
+import firmwareUpdateIcon from './assets/firmware_update.svg?raw';
 import {
   fetchGeminiModuleJson,
   fetchPortalJson,
@@ -54,12 +56,14 @@ import {
   svgWithClass,
 } from './portal/uiHelpers';
 import { parseClockTimeInputValue } from './portal/duration';
+import { createFirmwareUpdateController } from './portal/firmwareUpdate';
 import { createProviderKeysController } from './portal/providerKeys';
 import { createTimeController } from './portal/time';
 import { createWiFiController } from './portal/wifi';
 import { bindPortalEvents } from './portal/events';
 import { updatePortalUiState } from './portal/uiState';
 import type {
+  CardField,
   OpenAiModuleResponse,
   TalkingClockModuleResponse,
   ValidatableField,
@@ -68,6 +72,7 @@ import type {
 defineBottomSheet();
 defineButton();
 defineCard();
+defineFileUpload();
 defineIconButton();
 defineInput();
 defineNetworkList();
@@ -181,6 +186,16 @@ const wifiController = createWiFiController({
   wifiStatusCard: dom.wifiStatusCard,
 });
 
+const firmwareUpdateCard = document.getElementById('firmwareUpdateCard') as CardField;
+const firmwareUpdateController = createFirmwareUpdateController({
+  card: firmwareUpdateCard,
+  fileInput: document.getElementById('firmwareFileInput') as Parameters<
+    typeof createFirmwareUpdateController
+  >[0]['fileInput'],
+  uploadBtn: document.getElementById('firmwareUploadBtn') as HTMLButtonElement,
+  versionText: document.getElementById('firmwareVersionText') as HTMLElement,
+});
+
 function updatePageFade() {
   if (!pageFade) {
     return;
@@ -197,6 +212,8 @@ function initialize() {
   dom.wifiStatusCard.iconSvg = wifiIcon;
   dom.geminiCard.iconSvg = apiKeyIcon;
   dom.timezoneLocationCard.iconSvg = clockIcon;
+  firmwareUpdateCard.iconSvg = firmwareUpdateIcon;
+  firmwareUpdateController.bind();
 
   wifiController.renderNetworkList();
 
@@ -259,6 +276,7 @@ async function loadInitialStatus() {
     timeController.fetchTimeSettingsStatus(),
     wifiController.checkStatus(),
     loadGeminiSettings(),
+    firmwareUpdateController.refreshVersion(),
   ]);
 }
 

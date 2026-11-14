@@ -26,6 +26,7 @@
 #include "chroninkle_task_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "firmware_update_service.h"
 #include "gemini_service.h"
 #include "imu_service.h"
 #include "input_focus_runtime.h"
@@ -1458,6 +1459,7 @@ void RegisterWifiBackendRoutes(httpd_handle_t server, void*)
 {
     timezone_service::RegisterPortalRoutes(server);
     gemini_service::RegisterPortalRoutes(server);
+    firmware_update_service::RegisterPortalRoutes(server);
 }
 
 void HandleGeminiEvent(const gemini_service::Event& event, void*)

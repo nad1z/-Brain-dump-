@@ -10,6 +10,16 @@ via `git log`, not backfilled here.
 
 ### Added
 
+- **Firmware updates over Wi-Fi.** The setup web page has a new Firmware
+  Update section: it shows the installed version and installs an uploaded
+  update file into the spare firmware slot, then restarts the device. Files
+  that aren't a Chroninkle firmware image, or that fail verification, are
+  refused without changing anything (new `firmware_update_service`
+  component; `POST /api/update`, `GET /api/runtime/update`).
+- **Automatic builds.** GitHub Actions now compiles the firmware on every
+  push and attaches the update file and a full USB-flash image, plus PNG
+  previews of device screens rendered on a computer (`tools/preview/`).
+
 - A **24-hour clock** option. On the Time page the AM/PM button now cycles
   AM, PM and 24H; saving with 24H selected shows the status bar clock and
   every recording's time as `HH:MM` with no AM/PM. The choice is stored on

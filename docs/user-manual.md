@@ -24,6 +24,7 @@ broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
 - [Topics](#topics)
 - [Books](#books)
 - [Settings](#settings)
+- [Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)
 - [Locking, sleep, and battery](#locking-sleep-and-battery)
 - [Shutting down and charging](#shutting-down-and-charging)
 - [Tips and things that surprise people](#tips-and-things-that-surprise-people)
@@ -361,6 +362,27 @@ thought](#recording-a-thought).
   **Delete** it. Deleting asks you to confirm; anything already
   tagged with that topic simply loses
   it, keeping any other topics it has.
+
+## Updating the firmware over Wi-Fi
+
+Once a firmware version with this feature is on the device, later updates
+don't need a USB cable.
+
+1. Get the update file — the one whose name ends in `-update.bin`.
+2. On the device, open **Settings > Network** and turn **Access Point** on.
+3. On your phone or computer, join the Chroninkle hotspot and open the setup
+   page (`http://192.168.4.1`).
+4. In the **Firmware Update** section, choose the file and press **Install
+   Update**. The page shows the installed version and the upload progress.
+5. Keep the page open and the device powered until it restarts by itself,
+   about a minute. The page then shows the new version.
+
+If the file is the wrong one or arrives damaged, the device refuses it and
+keeps running the version it had. If a new version fails to start, the
+device goes back to the previous one on its own.
+
+The setup hotspot has no password, so anyone in range could reach this page
+while it is on — turn **Access Point** off again when you're done.
 
 ## Locking, sleep, and battery
 
