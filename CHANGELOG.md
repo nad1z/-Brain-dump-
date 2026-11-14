@@ -8,6 +8,26 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-14
+
+### Added
+
+- **Send books from your phone.** The setup web page has a Books section:
+  it lists the books on the device with the free space left, deletes them,
+  and uploads `.txt` and `.epub` files (several at once). EPUBs are turned
+  into plain text in the browser before they are sent (chapters and
+  paragraphs kept, DRM-protected files refused), and older Windows text
+  files (Western or Hebrew) are converted to UTF-8, so the device only ever
+  stores UTF-8 text. Uploads land in PSRAM and are written to the card in
+  one go (`upload.tmp`, then renamed), so a dropped connection never leaves
+  half a book. New routes `GET /api/books`, `POST /api/books/upload`,
+  `POST /api/books/delete`.
+- **Download recordings.** A Recordings section lists every recording,
+  newest first, with its type, date, length and title, and saves each one's
+  audio (`.wav`) or transcript (`.txt`), or all transcripts in one file. New
+  routes `GET /api/recordings` (streamed, so a large archive never has to
+  fit in RAM) and `GET /api/recordings/audio?id=`.
+
 ## [1.9.2] - 2026-11-14
 
 ### Fixed

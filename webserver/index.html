@@ -142,6 +142,48 @@
             </ui-button>
         </ui-card>
 
+        <ui-card id="booksCard" title="Books">
+            <p id="booksSummary" class="form-helper-text">Loading…</p>
+            <ul id="booksList" class="file-list"></ul>
+
+            <ui-file-upload
+              id="bookFileInput"
+              label="Add books"
+              aria-label="Book files"
+              accept=".txt,.epub,text/plain,application/epub+zip"
+              multiple
+              warning-text="Plain .txt or .epub. EPUB books are turned into text on this phone before they are sent, so the device only stores text. Copy-protected (DRM) EPUBs can't be read."
+            ></ui-file-upload>
+
+            <ui-button
+              slot="footer"
+              id="bookUploadBtn"
+              variant="primary"
+            >
+              Send to device
+            </ui-button>
+        </ui-card>
+
+        <ui-card id="recordingsCard" title="Recordings">
+            <p id="recordingsSummary" class="form-helper-text">Loading…</p>
+            <ul id="recordingsList" class="file-list"></ul>
+
+            <ui-button
+              slot="footer"
+              id="recordingsRefreshBtn"
+              variant="secondary"
+            >
+              Refresh
+            </ui-button>
+            <ui-button
+              slot="footer"
+              id="recordingsAllTranscriptsBtn"
+              variant="primary"
+            >
+              All transcripts
+            </ui-button>
+        </ui-card>
+
         <ui-card id="firmwareUpdateCard" title="Firmware Update">
             <p id="firmwareVersionText" class="form-helper-text">Installed version: …</p>
 

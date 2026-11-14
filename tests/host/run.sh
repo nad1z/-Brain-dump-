@@ -28,6 +28,7 @@ g++ -std=c++20 -O1 -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-ini
     -I"$root/components/recording_archive_service/include" \
     -I"$root/components/recording_service/include" \
     -I"$root/components/gemini_service/include" \
+    -I"$root/components/text_reader_service/include" \
     "$here"/*.cpp \
     "$root"/components/epaper_ui/*.cpp \
     "$root"/components/project_assets/*.cpp \
@@ -35,6 +36,7 @@ g++ -std=c++20 -O1 -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-ini
     "$root/components/gemini_service/organized_transcript.cpp" \
     "$root/main/timeline_format.cpp" \
     "$root/main/changelog_text.cpp" \
+    "$root/components/text_reader_service/text_reader_book_filename.cpp" \
     "$root/main/time_page_coordinator.cpp" \
     -lcjson -o "$out/host_tests"
 

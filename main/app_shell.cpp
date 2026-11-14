@@ -43,6 +43,8 @@
 #include "settings_page_runtime.h"
 #include "settings_about_page_runtime.h"
 #include "settings_changelog_page_runtime.h"
+#include "text_reader_portal.h"
+#include "recording_archive_portal.h"
 #include "settings_storage_page_runtime.h"
 #include "settings_todos_page_runtime.h"
 #include "settings_topics_page_runtime.h"
@@ -1509,6 +1511,8 @@ void RegisterWifiBackendRoutes(httpd_handle_t server, void*)
     gemini_service::RegisterPortalRoutes(server);
     firmware_update_service::SetPrecondition(FirmwareUpdateAllowed);
     firmware_update_service::RegisterPortalRoutes(server);
+    text_reader_service::RegisterPortalRoutes(server);
+    recording_archive_service::RegisterPortalRoutes(server);
 }
 
 void HandleGeminiEvent(const gemini_service::Event& event, void*)

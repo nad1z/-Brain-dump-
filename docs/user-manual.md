@@ -25,6 +25,7 @@ named `BrainDump-` followed by three pairs of letters and digits.
 - [Books](#books)
 - [Settings](#settings)
 - [Hebrew](#hebrew)
+- [Books and recordings on your phone](#books-and-recordings-on-your-phone)
 - [Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)
 - [Locking, sleep, and battery](#locking-sleep-and-battery)
 - [Shutting down and charging](#shutting-down-and-charging)
@@ -281,8 +282,10 @@ with this topic yet" and no Summarize button.
 ## Books
 
 The Home screen's **Books** item opens a simple on-device reader for plain
-`.txt` files — copy them onto the SD card's `books` folder (over USB mass
-storage, from Settings > Storage) and they'll show up here.
+text. The easiest way to add books is the **Books** section of the setup web
+page (see [Books and recordings on your phone](#books-and-recordings-on-your-phone)),
+which takes `.txt` and `.epub` files. You can also copy `.txt` files straight
+onto the SD card's `books` folder over USB (Settings > Storage > Enable OTG).
 
 - Selecting **Books** shows the list of `.txt` files found in that folder.
   Tilt the rocker to move between them, and select one to open a menu with:
@@ -301,8 +304,10 @@ storage, from Settings > Storage) and they'll show up here.
   current session. Reopening a book you've read a long way into may take a
   moment to open while it re-figures out where earlier pages started.
 - The reader only looks in that one folder (no subfolders), and only reads
-  `.txt` files — other formats aren't supported. Save Hebrew books as UTF-8
-  text.
+  `.txt` files. EPUB books sent from the setup page are turned into `.txt`
+  on your phone first, so they appear here like any other book. If you copy
+  Hebrew books over USB yourself, save them as UTF-8 text (the setup page
+  converts older Hebrew text files for you).
 
 ## Settings
 
@@ -450,6 +455,42 @@ direction. Summaries are written in the language you spoke.
 The device's own menus and buttons stay in English. Vowel points (nikud)
 are not shown, and the on-screen keyboard has no Hebrew letters, so topic
 names are typed in English.
+
+## Books and recordings on your phone
+
+The setup web page also lets you add books and take your recordings off the
+device, without a cable:
+
+1. On the device, open **Settings > Network** and turn **Access Point** on.
+2. On your phone or computer, join the Brain Dump hotspot and open
+   `http://192.168.4.1`.
+
+**Books.** The list shows the books on the device, their size, and the free
+space on the SD card; **Delete** removes one (after asking). To add books,
+choose one or more `.txt` or `.epub` files and press **Send to device**:
+
+- An **EPUB** is converted to plain text on your phone before it is sent:
+  chapters and paragraphs are kept, pictures and formatting are dropped. The
+  device only ever stores text, so it opens as fast as any `.txt` book.
+  Copy-protected (DRM) EPUBs from stores can't be converted.
+- A `.txt` file can be UTF-8 or an older Windows file (Western or Hebrew);
+  it is converted to UTF-8 as it is sent.
+- The book is named after the EPUB's title (or the file name). Names can only
+  use English letters, digits and simple punctuation, so a Hebrew title is
+  saved as `book.txt` — rename the file before sending if you want a
+  different name. Sending a book with the same name as one already on the
+  device asks whether to replace it, and replacing it starts it from page
+  one.
+
+**Recordings.** Every recording, newest first, with its type, date, length
+and title (or the start of its transcript). **Audio** downloads the recording
+as a `.wav` file; **Transcript** saves its text as a `.txt` file; **All
+transcripts** saves every transcript in one file. Archived Todos no longer
+have their audio, so only **Transcript** is offered for them. **Refresh**
+reloads the list after you record something new.
+
+While the SD card is connected to a computer as a USB drive, both sections
+say so and wait until you turn that off.
 
 ## Updating the firmware over Wi-Fi
 

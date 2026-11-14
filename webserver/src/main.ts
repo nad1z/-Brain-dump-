@@ -24,6 +24,8 @@ import apiKeyIcon from './assets/api_key.svg?raw';
 import checkIcon from './assets/check.svg?raw';
 import clockIcon from './assets/clock.svg?raw';
 import firmwareUpdateIcon from './assets/firmware_update.svg?raw';
+import booksIcon from './assets/info.svg?raw';
+import recordingsIcon from './assets/firmware_download.svg?raw';
 import {
   fetchGeminiModuleJson,
   fetchPortalJson,
@@ -57,6 +59,8 @@ import {
 } from './portal/uiHelpers';
 import { parseClockTimeInputValue } from './portal/duration';
 import { createFirmwareUpdateController } from './portal/firmwareUpdate';
+import { createBooksController } from './portal/books';
+import { createRecordingsController } from './portal/recordings';
 import { createProviderKeysController } from './portal/providerKeys';
 import { createTimeController } from './portal/time';
 import { createWiFiController } from './portal/wifi';
@@ -196,6 +200,26 @@ const firmwareUpdateController = createFirmwareUpdateController({
   versionText: document.getElementById('firmwareVersionText') as HTMLElement,
 });
 
+const booksCard = document.getElementById('booksCard') as CardField;
+const booksController = createBooksController({
+  card: booksCard,
+  fileInput: document.getElementById('bookFileInput') as Parameters<
+    typeof createBooksController
+  >[0]['fileInput'],
+  uploadBtn: document.getElementById('bookUploadBtn') as HTMLButtonElement,
+  list: document.getElementById('booksList') as HTMLElement,
+  summary: document.getElementById('booksSummary') as HTMLElement,
+});
+
+const recordingsCard = document.getElementById('recordingsCard') as CardField;
+const recordingsController = createRecordingsController({
+  card: recordingsCard,
+  list: document.getElementById('recordingsList') as HTMLElement,
+  summary: document.getElementById('recordingsSummary') as HTMLElement,
+  refreshBtn: document.getElementById('recordingsRefreshBtn') as HTMLButtonElement,
+  allTranscriptsBtn: document.getElementById('recordingsAllTranscriptsBtn') as HTMLButtonElement,
+});
+
 function updatePageFade() {
   if (!pageFade) {
     return;
@@ -214,6 +238,10 @@ function initialize() {
   dom.timezoneLocationCard.iconSvg = clockIcon;
   firmwareUpdateCard.iconSvg = firmwareUpdateIcon;
   firmwareUpdateController.bind();
+  booksCard.iconSvg = booksIcon;
+  booksController.bind();
+  recordingsCard.iconSvg = recordingsIcon;
+  recordingsController.bind();
 
   wifiController.renderNetworkList();
 
