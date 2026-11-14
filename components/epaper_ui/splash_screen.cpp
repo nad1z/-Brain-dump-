@@ -9,7 +9,7 @@
 namespace epaper_ui {
 namespace {
 
-constexpr int kLogoGap = design::spacing::k16;
+constexpr int kLogoGap = design::spacing::k12;
 constexpr int kAttributionGap = design::spacing::k8;
 constexpr int kBottomMargin = design::spacing::k48;
 constexpr std::string_view kAttributionLabel = "Based on";
@@ -26,8 +26,8 @@ void DrawSplashScreen(uint8_t* framebuffer,
     const EmbeddedImageAsset* hero_logo =
         project_assets::GetLogo(EmbeddedLogoId::kBrainDumpLogoStacked);
     const EmbeddedImageAsset* chroninkle_logo =
-        project_assets::GetLogo(EmbeddedLogoId::kChroninkleLogo);
-    const EmbeddedImageAsset* followup_logo = project_assets::GetLogo(EmbeddedLogoId::kFollowupLogo);
+        project_assets::GetLogo(EmbeddedLogoId::kChroninkleLogoSmall);
+    const EmbeddedImageAsset* followup_logo = project_assets::GetLogo(EmbeddedLogoId::kFollowupLogoSmall);
     const EmbeddedImageAsset* alxv_logo = project_assets::GetLogo(EmbeddedLogoId::kAlxvLabsLogo);
     if (framebuffer == nullptr || hero_logo == nullptr || chroninkle_logo == nullptr ||
         followup_logo == nullptr || alxv_logo == nullptr) {

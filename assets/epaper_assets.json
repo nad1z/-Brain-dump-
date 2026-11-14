@@ -21,8 +21,16 @@
       "symbol": "kChroninkleLogoStacked"
     },
     {
+      "path": "assets/logos/chroninkle-logo-small.png",
+      "symbol": "kChroninkleLogoSmall"
+    },
+    {
       "path": "assets/logos/folloup-logo.png",
       "symbol": "kFollowupLogo"
+    },
+    {
+      "path": "assets/logos/folloup-logo-small.png",
+      "symbol": "kFollowupLogoSmall"
     }
   ],
   "icons": [
