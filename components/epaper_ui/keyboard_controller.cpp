@@ -59,13 +59,58 @@ bool KeyboardController::MoveFocus(KeyboardState& state, int delta)
         state.selected_key_index = 0;
         return false;
     }
+    if (delta == 0) {
+        return false;
+    }
+    ClampSelection(state);
 
-    const int next = WrapIndex(state.selected_key_index + delta, key_count);
-    if (next == state.selected_key_index) {
+    int row = 0;
+    int column = 0;
+    if (KeyboardKeyAt(state.layout, static_cast<size_t>(state.selected_key_index), &row,
+                      &column) == nullptr) {
+        return false;
+    }
+    const KeyboardLayoutSpec& layout = GetKeyboardLayout(state.layout);
+    const int row_count = static_cast<int>(layout.row_count);
+    const int row_keys = static_cast<int>(layout.rows[row].key_count);
+
+    int next = state.selected_key_index;
+    if (state.row_entered) {
+        // Across the entered row, wrapping at its ends.
+        next = KeyboardFlatIndex(state.layout, row, WrapIndex(column + delta, row_keys));
+    } else {
+        // Whole rows. Keep roughly the same horizontal position so entering a row lands near
+        // where the previous row was entered (rows have different key counts).
+        const int next_row = WrapIndex(row + delta, row_count);
+        const int next_keys = static_cast<int>(layout.rows[next_row].key_count);
+        const int next_column =
+            row_keys <= 1 ? 0 : std::min(next_keys - 1, (column * next_keys) / row_keys);
+        next = KeyboardFlatIndex(state.layout, next_row, next_column);
+    }
+    if (next < 0 || next == state.selected_key_index) {
         return false;
     }
     state.selected_key_index = next;
     return true;
+}
+
+bool KeyboardController::ExitRow(KeyboardState& state)
+{
+    if (!state.row_entered) {
+        return false;
+    }
+    state.row_entered = false;
+    return true;
+}
+
+int KeyboardController::SelectedRow(const KeyboardState& state)
+{
+    int row = 0;
+    if (KeyboardKeyAt(state.layout, static_cast<size_t>(state.selected_key_index), &row,
+                      nullptr) == nullptr) {
+        return 0;
+    }
+    return row;
 }
 
 KeyboardActionResult KeyboardController::ActivateFocusedKey(KeyboardState& state, bool long_press)
@@ -78,6 +123,35 @@ KeyboardActionResult KeyboardController::ActivateFocusedKey(KeyboardState& state
     if (key == nullptr) {
         return result;
     }
+
+    if (!state.row_entered) {
+        // First press picks the highlighted row; the next press types a key in it.
+        state.row_entered = true;
+        result.state_changed = true;
+        return result;
+    }
+    // Switching to a layout with different rows drops back to choosing a row, since the
+    // entered row no longer means the same keys. Shift keeps the same rows, so it stays.
+    const KeyboardLayoutKind layout_before = state.layout;
+    result = ActivateKey(state, *key, long_press);
+    const bool same_rows =
+        (layout_before == KeyboardLayoutKind::kLettersLower ||
+         layout_before == KeyboardLayoutKind::kLettersUpper) &&
+        (state.layout == KeyboardLayoutKind::kLettersLower ||
+         state.layout == KeyboardLayoutKind::kLettersUpper);
+    if (state.layout != layout_before && !same_rows) {
+        state.row_entered = false;
+        result.state_changed = true;
+    }
+    return result;
+}
+
+KeyboardActionResult KeyboardController::ActivateKey(KeyboardState& state,
+                                                     const KeyboardKeySpec& key_spec,
+                                                     bool long_press)
+{
+    KeyboardActionResult result = {};
+    const KeyboardKeySpec* key = &key_spec;
 
     switch (key->kind) {
         case KeyboardKeyKind::kCharacter:

@@ -1076,6 +1076,24 @@ app_interaction::InputResult HandleButtonEvent(const button_service::ButtonEvent
             result.consumed = true;
             keyboard_handler = s_keyboard_event_handler;
             keyboard_context = s_keyboard_event_context;
+            if (button_service::IsBackGesture(event)) {
+                // Back leaves an entered row; from row selection it closes the keyboard, the
+                // same as its Dismiss key.
+                if (epaper_ui::KeyboardController::ExitRow(s_keyboard_state)) {
+                    request_refresh = true;
+                } else {
+                    keyboard_callback_state = s_keyboard_state;
+                    keyboard_callback_intent = epaper_ui::KeyboardIntent::kDismiss;
+                    s_keyboard_state = {};
+                    s_keyboard_event_handler = nullptr;
+                    s_keyboard_event_context = nullptr;
+                    request_refresh = true;
+                }
+                play_click = true;
+                refresh_policy =
+                    DetermineOverlayRefreshPolicy(before, CaptureOverlayRefreshSnapshotLocked());
+                goto done_locked;
+            }
             switch (event.event) {
                 case button_service::ButtonEvent::kSingleClick:
                     if (button_service::IsSelectButton(event.button)) {

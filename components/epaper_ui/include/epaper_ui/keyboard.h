@@ -18,6 +18,10 @@ struct KeyboardState {
     KeyboardLayoutKind layout = KeyboardLayoutKind::kLettersLower;
     int selected_key_index = 0;
     bool shift_locked = false;
+    // Two-step selection for a rocker with only up/down: while false, UP/DOWN pick a whole row
+    // (drawn highlighted) and Select enters it; while true, UP/DOWN move across that row's keys
+    // and Select types the key. Back leaves the row (see KeyboardController::ExitRow).
+    bool row_entered = false;
 
     bool operator==(const KeyboardState& other) const = default;
 };

@@ -409,6 +409,9 @@ void DrawKeyboard(uint8_t* framebuffer,
                            style);
 
     const KeyboardLayoutSpec& layout = GetKeyboardLayout(state.layout);
+    int selected_row = 0;
+    (void)KeyboardKeyAt(state.layout, static_cast<size_t>(std::max(0, state.selected_key_index)),
+                        &selected_row, nullptr);
     for (size_t row = 0; row < layout.row_count; ++row) {
         for (size_t column = 0; column < layout.rows[row].key_count; ++column) {
             const int flat_index = KeyboardFlatIndex(
@@ -440,7 +443,11 @@ void DrawKeyboard(uint8_t* framebuffer,
                            .label_text = key.kind == KeyboardKeyKind::kEnter
                                              ? KeyboardSubmitLabel(state.input.submit_style)
                                              : key.label,
-                           .selected = flat_index == state.selected_key_index,
+                           // Choosing a row highlights every key in it; inside a row, just
+                           // the one key.
+                           .selected = state.row_entered
+                                           ? flat_index == state.selected_key_index
+                                           : static_cast<int>(row) == selected_row,
                        },
                        button_style);
         }

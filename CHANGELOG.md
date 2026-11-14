@@ -8,6 +8,16 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-14
+
+### Changed
+
+- **Faster typing on the on-screen keyboard.** Tilting first picks a whole
+  row (highlighted); pressing in enters it, tilting moves across its keys
+  (wrapping at the ends) and pressing in types. Record steps back out to
+  row choice, and from there closes the keyboard. Getting from `q` to `m`
+  now takes 6 actions instead of 26 tilts.
+
 ## [1.5.0] - 2026-11-14
 
 ### Changed

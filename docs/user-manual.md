@@ -59,6 +59,23 @@ A few things worth knowing up front:
   full-screen refresh (opening a new screen, waking up). Smaller updates
   (moving a selection, a checkbox) redraw more quietly. This is normal.
 
+### Typing on the on-screen keyboard
+
+The keyboard (for a Wi-Fi password or a topic name) works in two steps, so
+you never have to tilt through every key:
+
+1. **Pick a row.** The whole row is highlighted. Tilt up or down to move
+   between rows.
+2. **Press in** to go into that row, then tilt to move across its keys
+   (it wraps around at the ends, so the far end is often only a tilt or two
+   away). Press in to type the highlighted key. You stay in the row, so
+   letters next to each other are quick to type.
+3. **Tap Record** to come back out to choosing rows. Tapping Record again
+   while choosing rows closes the keyboard without saving.
+
+Switching to numbers or symbols (the **123** key) takes you back to
+choosing a row, since the rows change. **Shift** keeps you where you are.
+
 ## First-time setup
 
 On first boot, Brain Dump walks you through a short introduction carousel.
