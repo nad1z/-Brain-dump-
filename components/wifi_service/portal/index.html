@@ -102,6 +102,13 @@
               <option value="">Select timezone</option>
             </ui-select>
 
+            <div id="timezoneDetectRow" class="form-control-row" style="display: none">
+              <p class="form-helper-text">
+                This phone is set to <strong id="timezoneDetectName"></strong>.
+              </p>
+              <ui-button id="timezoneDetectBtn" variant="secondary">Use it</ui-button>
+            </div>
+
             <div class="form-control-row">
               <ui-input
                 id="manualTimeInput"
