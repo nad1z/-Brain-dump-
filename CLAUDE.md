@@ -302,7 +302,9 @@ personal credentials afterward, and no risk of a release accidentally shipping t
   what a power-key press or a sound cue *means* belongs in `main/` or
   `feedback_service`, not the driver.
 - Don't hand-edit generated files: `components/project_assets/generated_*`,
-  `components/epaper_ui/generated_epaper_fonts.*`, and
+  `components/epaper_ui/generated_epaper_fonts.*`,
+  `components/epaper_ui/generated_epaper_hebrew_fonts.*`
+  (`scripts/generate_epaper_hebrew_fonts.py`), and
   `components/wifi_service/portal/*` (regenerate via the scripts/build steps
   above instead).
 - `GPIO0` (`ACTION`/BOOT button) is the boot/download strap pin and must read

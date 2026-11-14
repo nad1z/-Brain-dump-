@@ -60,8 +60,9 @@ constexpr const char* kUploadUrl =
     "https://generativelanguage.googleapis.com/upload/v1beta/files";
 constexpr const char* kAudioMimeType = "audio/wav";
 constexpr const char* kTranscriptPrompt =
-    "Generate a verbatim transcript of the speech in this audio. Respond with transcript text "
-    "only. Do not add commentary or formatting.";
+    "Generate a verbatim transcript of the speech in this audio, in the language that is "
+    "spoken (do not translate; keep mixed-language speech as spoken). Respond with transcript "
+    "text only. Do not add commentary or formatting.";
 constexpr int kTranscribeTimeoutMs = 30000;
 constexpr size_t kHttpUploadChunkSamples = 2048;
 

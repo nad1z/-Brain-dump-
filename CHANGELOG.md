@@ -10,6 +10,13 @@ via `git log`, not backfilled here.
 
 ### Added
 
+- **Hebrew on screen.** Transcripts, list previews, summaries, lock-screen
+  to-dos and Books now draw Hebrew right to left (Heebo glyphs for the
+  letter block, a compact bidirectional layout for mixed Hebrew/English/
+  numbers, right alignment for Hebrew lines). English-only text takes the
+  same fast path as before. The transcription prompt now says not to
+  translate, and summaries are requested in the source language.
+
 - **Firmware updates over Wi-Fi.** The setup web page has a new Firmware
   Update section: it shows the installed version and installs an uploaded
   update file into the spare firmware slot, then restarts the device. Files

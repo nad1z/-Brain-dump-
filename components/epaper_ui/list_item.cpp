@@ -219,16 +219,17 @@ void DrawListItem(uint8_t* framebuffer,
         const UiRect body_cell = grid.CellBounds(portrait_width, 0, 1);
         const std::string body_text = FitLabelText(style.body_role, state.body_text, body_cell.width);
         if (!body_text.empty()) {
+            const int body_x = TextStartX(style.body_role, body_text, body_cell.x, body_cell.width);
             if (state.selected && style.selected_content_outlined) {
                 ForEachOutlineOffset(style.selected_content_stroke_thickness, [&](int dx, int dy) {
                     DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width,
-                                       portrait_height, body_cell.x + dx, body_cell.y + dy,
+                                       portrait_height, body_x + dx, body_cell.y + dy,
                                        body_text, style.body_role,
                                        style.selected_content_outline_color);
                 });
             }
             DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
-                               body_cell.x, body_cell.y, body_text, style.body_role, body_color);
+                               body_x, body_cell.y, body_text, style.body_role, body_color);
         }
     }
 

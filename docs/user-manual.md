@@ -24,6 +24,7 @@ broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
 - [Topics](#topics)
 - [Books](#books)
 - [Settings](#settings)
+- [Hebrew](#hebrew)
 - [Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)
 - [Locking, sleep, and battery](#locking-sleep-and-battery)
 - [Shutting down and charging](#shutting-down-and-charging)
@@ -270,7 +271,8 @@ storage, from Settings > Storage) and they'll show up here.
   current session. Reopening a book you've read a long way into may take a
   moment to open while it re-figures out where earlier pages started.
 - The reader only looks in that one folder (no subfolders), and only reads
-  `.txt` files — other formats aren't supported.
+  `.txt` files — other formats aren't supported. Save Hebrew books as UTF-8
+  text.
 
 ## Settings
 
@@ -362,6 +364,18 @@ thought](#recording-a-thought).
   **Delete** it. Deleting asks you to confirm; anything already
   tagged with that topic simply loses
   it, keeping any other topics it has.
+
+## Hebrew
+
+You can record in Hebrew. The transcript is kept in Hebrew (it is not
+translated), and the device shows it right to left: transcripts, the lists
+of notes and to-dos, summaries, the lock screen's to-do list, and Books.
+English words and numbers inside a Hebrew sentence keep their normal
+direction. Summaries are written in the language you spoke.
+
+The device's own menus and buttons stay in English. Vowel points (nikud)
+are not shown, and the on-screen keyboard has no Hebrew letters, so topic
+names are typed in English.
 
 ## Updating the firmware over Wi-Fi
 

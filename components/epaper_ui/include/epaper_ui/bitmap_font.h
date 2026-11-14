@@ -27,7 +27,26 @@ struct BitmapFont {
     const uint8_t* bitmaps;
 };
 
+// Glyphs outside ASCII (currently the Hebrew letters) that accompany one Latin font: same pixel
+// size, weight and baseline, stored in their own tables so the generated Latin fonts stay as-is.
+struct ExtraGlyphRange {
+    const BitmapFont* base;
+    uint16_t first_codepoint;
+    uint16_t glyph_count;
+    const GlyphBitmap* glyphs;
+    const uint8_t* bitmaps;
+};
+
+// A glyph together with the bitmap table its bitmap_offset indexes into.
+struct GlyphRef {
+    const GlyphBitmap* glyph = nullptr;
+    const uint8_t* bitmaps = nullptr;
+};
+
 const GlyphBitmap* FindGlyph(const BitmapFont& font, char ch);
+// Unicode-aware lookup: ASCII from the font itself, Hebrew from its companion range, anything
+// else (or a font with no companion) as '?'.
+GlyphRef FindGlyphForCodepoint(const BitmapFont& font, uint32_t codepoint);
 int MeasureText(const BitmapFont& font, std::string_view text, int tracking = 0);
 
 }  // namespace epaper_font

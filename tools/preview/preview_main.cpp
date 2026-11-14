@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "epaper_ui/details_page.h"
 #include "epaper_ui/status_bar.h"
 #include "epaper_ui/time_page.h"
 
@@ -83,6 +84,27 @@ void RenderTimePage(const std::string& out_dir, const std::string& name, const s
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+// A recording's Details page with a transcript: `transcript` is UTF-8, as stored on the SD card.
+void RenderDetailsPage(const std::string& out_dir, const std::string& name,
+                       const std::string& transcript)
+{
+    epaper_ui::DetailsPageState state = {};
+    state.recording_header.time_text = "17:05";
+    state.recording_header.minute_seconds_text = "42s";
+    state.recording_header.tag_text = "Idea";
+    state.scroll_container.content_text = transcript;
+    state.edit_topics_button.label_text = "Edit topics";
+    state.back_button.label_text = "Back";
+    state.back_button.selected = true;
+
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawDetailsPage(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                               kPortraitHeight, state, StatusBar("17:05"),
+                               epaper_ui::GlobalFooterState{});
+    const std::string path = out_dir + "/" + name + ".pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -90,5 +112,13 @@ int main(int argc, char** argv)
     const std::string out_dir = argc > 1 ? argv[1] : ".";
     RenderTimePage(out_dir, "time_page_12h", "05", "PM", "5:05 PM");
     RenderTimePage(out_dir, "time_page_24h", "17", "24H", "17:05");
+    RenderDetailsPage(out_dir, "details_english",
+                      "Idea for the brain dump device: sync reminders to the calendar, and keep "
+                      "the radio off until there is something to send.");
+    RenderDetailsPage(
+        out_dir, "details_hebrew",
+        "רעיון למכשיר: לסנכרן תזכורות ליומן של Google, ולהשאיר את ה-WiFi כבוי עד שיש מה "
+        "לשלוח.\nלהתקשר לבנק מחר ב-09:30 (חשוב!) ולשלם 1,250 שקל.\nPlain English line in the "
+        "middle.\nלקנות חלב, לחם וביצים.");
     return 0;
 }

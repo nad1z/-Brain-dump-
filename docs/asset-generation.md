@@ -22,6 +22,9 @@ conversion and CoreGraphics/CoreText for font rasterization.
 - `scripts/generate_epaper_footer_icons.py`
 - `scripts/generate_epaper_logos.py`
 - `scripts/generate_epaper_fonts.py`
+- `scripts/generate_epaper_hebrew_fonts.py` (Hebrew companion glyphs from
+  `fonts/Heebo[wght].ttf`, written to
+  `components/epaper_ui/generated_epaper_hebrew_fonts.*`)
 - `scripts/generate_epaper_assets_common.py`
 - `scripts/generate_epaper_project_assets.py`
 

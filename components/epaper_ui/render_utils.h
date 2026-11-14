@@ -38,6 +38,9 @@ std::vector<std::string> WrapTextToWidth(design::TypographyRole role,
 // the ellipsis will not fit.
 std::string FitLabelText(design::TypographyRole role, const std::string& text, int max_width);
 int CenterOffset(int container_size, int item_size);
+// Left edge to draw one line of `text` at inside a box starting at `x` and `available_width`
+// wide: `x` for left-to-right text, pushed to the box's right edge for a Hebrew line.
+int TextStartX(design::TypographyRole role, std::string_view text, int x, int available_width);
 bool ShouldDrawBlackForTone(int x, int y, uint8_t tone);
 void DrawPortraitPixel(uint8_t* framebuffer,
                        int raw_width,
