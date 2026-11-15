@@ -1,17 +1,19 @@
-# Chroninkle User Manual
+# Brain Dump User Manual
 
-![Chroninkle](../assets/logos/chroninkle-logo.png)
+![Brain Dump](../assets/logos/braindump-logo-stacked.png)
 
-Chroninkle is a pocket voice notebook. Press a button, speak your thought, tag
-it, and Chroninkle keeps it organized — transcribed, summarized, and sorted
+Brain Dump is a pocket voice notebook. Press a button, speak your thought, tag
+it, and Brain Dump keeps it organized — transcribed, summarized, and sorted
 into Notes, Todos, and Follow-ups — on a screen that sips power and stays
 legible even when it's "asleep."
 
 This manual describes the device as it actually behaves today. A couple of
 spots in the on-device onboarding carousel describe older button gestures
-that no longer apply — this manual is the accurate reference. Chroninkle was
-renamed from **Followup**; a device already running older firmware still
-broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
+that no longer apply — this manual is the accurate reference. Brain Dump is
+a fork of **Chroninkle**, which was itself renamed from **Followup**; a
+device still running one of those firmwares broadcasts its Wi-Fi setup
+hotspot under the older name until it's updated. Brain Dump's hotspot is
+named `BrainDump-` followed by three pairs of letters and digits.
 
 ## Contents
 
@@ -24,13 +26,15 @@ broadcasts its Wi-Fi setup hotspot under the old name until it's reflashed.
 - [Topics](#topics)
 - [Books](#books)
 - [Settings](#settings)
+- [Hebrew](#hebrew)
+- [Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)
 - [Locking, sleep, and battery](#locking-sleep-and-battery)
 - [Shutting down and charging](#shutting-down-and-charging)
 - [Tips and things that surprise people](#tips-and-things-that-surprise-people)
 
 ## At a glance: the buttons
 
-Chroninkle has three physical controls. There is no touchscreen — everything
+Brain Dump has three physical controls. There is no touchscreen — everything
 is driven by these.
 
 | Control | Quick action | Press and hold |
@@ -57,25 +61,31 @@ A few things worth knowing up front:
 
 ## First-time setup
 
-On first boot, Chroninkle walks you through a short introduction carousel.
+On first boot, Brain Dump walks you through a short introduction carousel.
 Use the **rocker** to move through it (tilt to move, press in to confirm),
 and close it on the final slide. You can replay this carousel any time from
 **Settings → Manual**.
 
-To actually get set up, Chroninkle opens its own WiFi hotspot named
-**`Chroninkle-XXXXXX`** (the last few characters are unique to your device)
+To actually get set up, Brain Dump opens its own WiFi hotspot named
+**`Brain Dump-XXXXXX`** (the last few characters are unique to your device)
 whenever it doesn't have saved WiFi credentials yet. Connect a phone or laptop to
 that hotspot — it's open, no password needed — and your device should
 automatically open a setup page (or visit `http://192.168.4.1` yourself).
 From there you can:
 
-- **Connect Chroninkle to your WiFi** — scan for networks, pick yours, enter
+- **Connect Brain Dump to your WiFi** — scan for networks, pick yours, enter
   the password.
 - **Add your Gemini API key** — this is what powers transcription and
   summaries. Without it, recordings still save to the SD card, they just
   won't be transcribed.
 - **Set your timezone and the current time/date** — needed for accurate
   timestamps on your recordings and for the "Today" grouping on Notes/Todos.
+- **Choose the language you speak** — in the same section, *Language you
+  speak*: **Detect automatically** (the default), **Hebrew**, **English**,
+  or **Hebrew and English mixed**. Recordings are always transcribed in the
+  language you speak, never translated; picking your language explicitly
+  helps when automatic detection gets it wrong (for example a short Hebrew
+  recording coming back in English). Titles follow the same language.
 
 You can come back to WiFi and time settings later from the device itself
 (see [Settings](#settings) below — they're the Network and Time pages in
@@ -88,21 +98,28 @@ This is the core interaction:
 
 1. **Press and hold the Record button.** You'll hear a start cue.
    Recording actually begins fractionally before the cue finishes, so
-   your first word isn't cut off — and Chroninkle even keeps a rolling
+   your first word isn't cut off — and Brain Dump even keeps a rolling
    one-second buffer while the button is held, so a beat of audio right
    before you "properly" started holding it is still caught.
-2. **Speak.** Recordings are capped at **10 seconds** — Chroninkle is built
+2. **Speak.** Recordings are capped at **10 seconds** — Brain Dump is built
    for quick captures, not long dictation. If you keep holding past 10
    seconds, it stops automatically.
-3. **Release the Record button.** You'll hear a stop cue, and Chroninkle
+3. **Release the Record button.** You'll hear a stop cue, and Brain Dump
    immediately plays your recording back to you.
-4. **Choose a tag**, from a menu with five options:
+4. **Choose a tag**, from a menu with six options:
+   - **Auto** — the first choice, so one press of the select button is
+     enough. Brain Dump files the recording for you: when it is
+     transcribed, it is sorted into Note, Task or Idea based on what you
+     said ("remind me to call the bank tomorrow" becomes a Task). Until
+     the transcript arrives — for example while there's no WiFi — it sits
+     with your Notes. If you later change the type yourself, your choice
+     is kept.
    - **Note** — a general thought.
    - **Task** — something to do. (This is what shows up on the **Todos**
      screen — the tag itself is called "Task," even though the screen
      that lists them is called "Todos.")
    - **Idea** — something to mull over later.
-   - **Topic** — doesn't save a note at all. Chroninkle transcribes what
+   - **Topic** — doesn't save a note at all. Brain Dump transcribes what
      you said, distills it into a short name, and adds it as a new
      [topic](#topics) (e.g. hold Record, say "kitchen renovation," pick
      Topic — that project name now exists as a topic you can tag other
@@ -111,7 +128,7 @@ This is the core interaction:
    - **Discard** — throws the recording away. Nothing is saved to the SD
      card if you pick this — that's exactly why the review-then-tag order
      exists: you get to hear it back before deciding.
-5. If you tagged it Note, Task, or Idea, and Chroninkle has WiFi and a
+5. If you chose Auto, Note, Task, or Idea, and Brain Dump has WiFi and a
    Gemini key configured, it transcribes the recording in the
    background — you'll see a brief "Transcribing recording..." message,
    then either a transcript being saved or a note that transcription
@@ -119,13 +136,13 @@ This is the core interaction:
    produce its name (see above), and Discard has nothing to transcribe.
 
 **If you're offline when you record**, the clip still saves to the SD
-card — it just gets marked as pending. The moment Chroninkle reconnects to
+card — it just gets marked as pending. The moment Brain Dump reconnects to
 WiFi, it automatically retries every pending recording. A small badge on
 the status bar shows how many are waiting.
 
 ## The Home screen
 
-Home is Chroninkle's dashboard. Near the top you'll see:
+Home is Brain Dump's dashboard. Near the top you'll see:
 
 - A **task tracker** — "`done`/`total` completed" with a progress bar, or
   "No tasks yet" if you haven't tagged anything as a Task.
@@ -192,7 +209,7 @@ it and tilt the rocker to flip between the two views.
 A completed Task doesn't disappear right away — it stays visible (checked
 off) in Current for a while, so you can see what you've gotten done.
 After it's been completed for a configurable number of days (7 by
-default — see [Settings](#settings)), Chroninkle automatically **archives**
+default — see [Settings](#settings)), Brain Dump automatically **archives**
 it: the audio recording is deleted to free up SD card space, but the
 transcript text is kept, and the item moves to the Archived view where you
 can still read it. You can also archive a completed item immediately with
@@ -249,8 +266,10 @@ with this topic yet" and no Summarize button.
 ## Books
 
 The Home screen's **Books** item opens a simple on-device reader for plain
-`.txt` files — copy them onto the SD card's `books` folder (over USB mass
-storage, from Settings > Storage) and they'll show up here.
+`.txt` files — add them from a phone or computer with **Share over WiFi**
+(Settings > Storage; EPUB books are converted to text for you), or copy
+them onto the SD card's `books` folder over USB (Settings > Storage >
+Enable OTG), and they'll show up here.
 
 - Selecting **Books** shows the list of `.txt` files found in that folder.
   Tilt the rocker to move between them, and select one to open a menu with:
@@ -269,12 +288,13 @@ storage, from Settings > Storage) and they'll show up here.
   current session. Reopening a book you've read a long way into may take a
   moment to open while it re-figures out where earlier pages started.
 - The reader only looks in that one folder (no subfolders), and only reads
-  `.txt` files — other formats aren't supported.
+  `.txt` files — other formats aren't supported. Save Hebrew books as UTF-8
+  text.
 
 ## Settings
 
 Settings is a hub, like a phone's settings app: six headings, each
-opening its own page, plus one action below them:
+opening its own page, then a switch and one action below them:
 
 - **Network** — WiFi and Access Point.
 - **Time** — timezone and clock.
@@ -282,6 +302,12 @@ opening its own page, plus one action below them:
 - **Todos** — todo archiving.
 - **Topics** — create, rename, and delete topics.
 - **About** — firmware version and acknowledgments.
+- **Silent mode** — turns the speaker off completely: no button sounds, no
+  start/stop sounds when recording, no playback of a recording right after
+  you make it (the save menu appears straight away), and the Details
+  page's Play does nothing. The speaker's amplifier is switched off too,
+  which saves a little battery. Stays on after a restart until you switch
+  it off.
 - **Manual** — replays the first-time onboarding carousel. This one isn't
   a heading — it's a direct action, since there's nothing to configure on
   it.
@@ -295,9 +321,24 @@ back to the Home screen, skipping the hub.
 
 From the top:
 
-1. **WiFi** — toggle WiFi on or off.
-2. **Access Point** — toggle Chroninkle's own setup hotspot on or off.
-3. A list of nearby networks — each row indicates whether it's open or
+1. **WiFi** — toggle WiFi on or off. While WiFi is off, the network list,
+   password and Scan/Connect buttons are hidden, since there is nothing to
+   show. With **Battery saver** on, switching
+   WiFi on means "sync now": the device connects, sends any recordings
+   waiting for a transcript, and turns WiFi off again about a minute after
+   it's done. Switching it off keeps it off until you switch it on again.
+2. **Access Point** — toggle Brain Dump's own setup hotspot on or off.
+3. **Battery saver** — keeps WiFi off most of the time to save battery
+   (off by default). Recordings are saved right away as usual but wait for
+   their transcript; WiFi comes on by itself to send them when three are
+   waiting, when one has waited 30 minutes, or whenever the device is
+   plugged in. So with Battery saver on, a transcript (and Auto filing, and
+   a reminder's due date) can take up to half an hour to appear unless you
+   sync. Summaries and the Details page's **Transcribe** button also need
+   WiFi — switch WiFi on first. If the device can't reach a network, it
+   gives up after two minutes and waits 15 minutes before trying again on
+   its own. While the setup hotspot is on, Battery saver does nothing.
+4. A list of nearby networks — each row indicates whether it's open or
    password-protected, its signal strength, and whether it's the one
    you're currently connected to. Select a network, enter its password if
    it needs one (there's a show/hide toggle for what you've typed), and
@@ -312,17 +353,42 @@ fields provided (hour, minute, AM/PM, month, day, year). Press **Sync &
 Save** when you're done — it both saves what you entered and re-syncs the
 clock.
 
+**12-hour or 24-hour clock.** The button next to the minutes cycles through
+**AM**, **PM** and **24H** each time you select it. Choose **24H** and press
+**Sync & Save** to show every time on the device — the status bar clock and
+the time on each recording — as 24-hour (for example `17:05` instead of
+`5:05 PM`). While **24H** is showing, enter the hour as 00–23. Cycle back to
+**AM** or **PM** and save to return to the 12-hour clock.
+
 ### Storage
 
 1. Free space and usage percent on the SD card (only shown when a card is
    inserted and mounted).
 2. **Enable OTG** — mounts the SD card as a USB drive on a computer you've
    connected via USB-C, so you can pull files off directly. While this is
-   active, the card is unavailable to Chroninkle itself, and you'll need to
+   active, the card is unavailable to Brain Dump itself, and you'll need to
    explicitly **Disable OTG mode** to get it back (there's no accidental
    way out of this while the cable's connected — that's intentional, so
-   Chroninkle doesn't touch the card while your computer has it mounted).
-3. **Format SD** — erases the SD card completely. Chroninkle asks you to
+   Brain Dump doesn't touch the card while your computer has it mounted).
+3. **Share over WiFi** — lets a phone or computer on the same WiFi network
+   see your recordings and manage your books, without a cable. The device
+   must be connected to WiFi first. A card shows the address to open (for
+   example `http://192.168.1.23`) and a four-digit PIN, which is new every
+   time you start sharing; enter the PIN on the page that opens. From
+   there you can:
+   - read every recording's transcript, newest first, with its type, title
+     and due date, and download its audio;
+   - **Export for Obsidian** — download all transcripts as one Markdown
+     file you can drop into an Obsidian vault (Tasks become checkboxes with
+     their due date);
+   - add books (`.txt` or `.epub` — an EPUB is converted to plain text by
+     the phone or computer before it is sent) and delete books.
+
+   Press **Stop sharing** on the device when you're done. Sharing also
+   stops on its own after 10 minutes without any requests, or if WiFi
+   disconnects. The same Recordings and Books sections also appear on the
+   setup page when you use the Access Point hotspot (no PIN there).
+4. **Format SD** — erases the SD card completely. Brain Dump asks you to
    confirm ("Formatting the SD card will erase everything on the card") —
    there's no undo once you confirm.
 
@@ -336,7 +402,7 @@ still archive individual items manually). Default is 7 days.
 
 ### About
 
-Shows the installed firmware version and an acknowledgment: Chroninkle
+Shows the installed firmware version and an acknowledgment: Brain Dump
 began as a fork of Followup, created by ALXV Labs.
 
 ### Manage topics
@@ -354,6 +420,42 @@ thought](#recording-a-thought).
   **Delete** it. Deleting asks you to confirm; anything already
   tagged with that topic simply loses
   it, keeping any other topics it has.
+
+## Hebrew
+
+You can record in Hebrew. The transcript is kept in Hebrew (it is not
+translated), and the device shows it right to left: transcripts, the lists
+of notes and to-dos, summaries, the lock screen's to-do list, and Books.
+English words and numbers inside a Hebrew sentence keep their normal
+direction. Summaries are written in the language you spoke.
+
+The device's own menus and buttons stay in English. Vowel points (nikud)
+are not shown, and the on-screen keyboard has no Hebrew letters, so topic
+names are typed in English.
+
+## Updating the firmware over Wi-Fi
+
+Once a firmware version with this feature is on the device, later updates
+don't need a USB cable.
+
+1. Get the update file — the one whose name ends in `-update.bin`.
+2. On the device, open **Settings > Network** and turn **Access Point** on.
+3. On your phone or computer, join the Brain Dump hotspot and open the setup
+   page (`http://192.168.4.1`).
+4. In the **Firmware Update** section, choose the file and press **Install
+   Update**. The page shows the installed version and the upload progress.
+5. Keep the page open and the device powered until it restarts by itself,
+   about a minute. The page then shows the new version.
+
+If the battery is below 30% and the device isn't plugged in, it refuses the
+update and asks you to plug it in first.
+
+If the file is the wrong one or arrives damaged, the device refuses it and
+keeps running the version it had. If a new version fails to start, the
+device goes back to the previous one on its own.
+
+The setup hotspot has no password, so anyone in range could reach this page
+while it is on — turn **Access Point** off again when you're done.
 
 ## Locking, sleep, and battery
 
@@ -374,8 +476,12 @@ on the Home screen in one step rather than needing a second press.
 **The lock screen itself** shows, at a glance:
 - The current weekday and date.
 - A **"TO-DO"** heading — or **"TO-DO - N PENDING"** if you have pending
-  Todos — followed by up to five of them (anything flagged as a
-  follow-up is shown first). If there are more than five, you'll see a
+  Todos — followed by up to five of them. Reminders that have a day or
+  time come first, soonest at the top, each starting with when it is due
+  ("Today 09:30", "Tomorrow", "Overdue"); a due time is picked up
+  automatically when you say one in the recording ("call the bank
+  tomorrow at nine"). After those come anything flagged as a follow-up,
+  then the rest. If there are more than five, you'll see a
   "+N more pending" line instead of a longer list. If you're all caught
   up, it just says so.
 

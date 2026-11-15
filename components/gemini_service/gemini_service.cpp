@@ -1,10 +1,13 @@
 #include "gemini_service.h"
 
+#include "organized_transcript.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -34,6 +37,8 @@ constexpr const char* kTag = "GeminiService";
 constexpr const char* kSettingsTag = "GeminiSettings";
 constexpr const char* kStorageNamespace = "gemini";
 constexpr const char* kStorageApiKey = "api_key";
+constexpr const char* kStorageLanguage = "lang";
+constexpr const char* kPortalApiSettingsTranscriptionUri = "/api/settings/transcription";
 constexpr const char* kDefaultModelName = "models/gemini-3.5-flash-lite";
 constexpr const char* kGeminiApiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/";
 constexpr const char* kPortalApiSettingsGeminiUri = "/api/settings/gemini";
@@ -59,9 +64,8 @@ constexpr const char* kWorkerTaskName = "gemini_worker";
 constexpr const char* kUploadUrl =
     "https://generativelanguage.googleapis.com/upload/v1beta/files";
 constexpr const char* kAudioMimeType = "audio/wav";
-constexpr const char* kTranscriptPrompt =
-    "Generate a verbatim transcript of the speech in this audio. Respond with transcript text "
-    "only. Do not add commentary or formatting.";
+// One request does both jobs -- transcribe and organise -- so the radio is not kept up for a
+// second round trip. The prompt is built by BuildTranscriptPrompt (organized_transcript.cpp).
 constexpr int kTranscribeTimeoutMs = 30000;
 constexpr size_t kHttpUploadChunkSamples = 2048;
 
@@ -244,6 +248,20 @@ std::string LoadStoredApiKey()
     const std::string api_key = TrimCopy(ReadNvsString(handle, kStorageApiKey));
     nvs_close(handle);
     return api_key;
+}
+
+std::mutex s_language_mutex;
+std::string s_language = {};  // empty until first read from NVS
+
+std::string LoadLanguageFromNvs()
+{
+    nvs_handle_t handle = 0;
+    if (nvs_open(kStorageNamespace, NVS_READONLY, &handle) != ESP_OK) {
+        return "auto";
+    }
+    const std::string value = ReadNvsString(handle, kStorageLanguage);
+    nvs_close(handle);
+    return IsKnownTranscriptionLanguage(value) ? value : "auto";
 }
 
 bool SaveStoredApiKey(const std::string& api_key)
@@ -799,6 +817,39 @@ esp_err_t RegisterPortalRoute(httpd_handle_t server, const httpd_uri_t* handler)
     return err;
 }
 
+esp_err_t SendLanguage(httpd_req_t* request, int status, const char* message)
+{
+    cJSON* root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "success", status == 200);
+    cJSON_AddStringToObject(root, "message", message);
+    cJSON_AddStringToObject(root, "language", GetTranscriptionLanguage().c_str());
+    return SendJsonResponse(request, status, root);
+}
+
+esp_err_t HandleTranscriptionSettingsGet(httpd_req_t* request)
+{
+    return SendLanguage(request, 200, "");
+}
+
+// Body: {"language": "auto" | "he" | "en" | "he+en"}
+esp_err_t HandleTranscriptionSettingsPatch(httpd_req_t* request)
+{
+    if (request == nullptr || request->content_len <= 0 ||
+        request->content_len > static_cast<int>(kMaxPortalPayloadLen)) {
+        return SendLanguage(request, 400, "Invalid transcription settings");
+    }
+    const std::string body = ReadRequestBody(request);
+    cJSON* root = cJSON_ParseWithLength(body.c_str(), body.size());
+    cJSON* language = root != nullptr ? cJSON_GetObjectItemCaseSensitive(root, "language") : nullptr;
+    const std::string value =
+        (cJSON_IsString(language) && language->valuestring != nullptr) ? language->valuestring : "";
+    cJSON_Delete(root);
+    if (!SetTranscriptionLanguage(value)) {
+        return SendLanguage(request, 400, "Unknown language");
+    }
+    return SendLanguage(request, 200, "Transcription language saved");
+}
+
 esp_err_t HandlePortalSettingsGet(httpd_req_t* request)
 {
     cJSON* root = cJSON_CreateObject();
@@ -1176,6 +1227,23 @@ HttpResponse PerformUploadFinalizePcmWav(const std::string& upload_url,
     return response;
 }
 
+// "2026-11-14 17:05, Saturday" in the device's configured timezone; empty when the clock has
+// not been set (the model then has nothing to resolve "tomorrow" against and leaves due empty).
+std::string CurrentLocalTimeForPrompt()
+{
+    const std::time_t now = std::time(nullptr);
+    std::tm local = {};
+    localtime_r(&now, &local);
+    if (local.tm_year + 1900 < 2024) {
+        return "unknown (leave \"due\" empty)";
+    }
+    char buffer[48] = {};
+    if (std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M, %A", &local) == 0) {
+        return "unknown (leave \"due\" empty)";
+    }
+    return buffer;
+}
+
 std::string BuildTranscriptRequestJson(const std::string& file_uri)
 {
     cJSON* root = cJSON_CreateObject();
@@ -1185,7 +1253,9 @@ std::string BuildTranscriptRequestJson(const std::string& file_uri)
     cJSON* parts = cJSON_AddArrayToObject(content, "parts");
 
     cJSON* prompt_part = cJSON_CreateObject();
-    cJSON_AddStringToObject(prompt_part, "text", kTranscriptPrompt);
+    const std::string prompt =
+        BuildTranscriptPrompt(GetTranscriptionLanguage(), CurrentLocalTimeForPrompt());
+    cJSON_AddStringToObject(prompt_part, "text", prompt.c_str());
     cJSON_AddItemToArray(parts, prompt_part);
 
     cJSON* audio_part = cJSON_CreateObject();
@@ -1196,6 +1266,7 @@ std::string BuildTranscriptRequestJson(const std::string& file_uri)
 
     cJSON* generation_config = cJSON_AddObjectToObject(root, "generationConfig");
     cJSON_AddNumberToObject(generation_config, "temperature", 0);
+    cJSON_AddStringToObject(generation_config, "responseMimeType", "application/json");
 
     char* raw = cJSON_PrintUnformatted(root);
     std::string json = raw != nullptr ? raw : "";
@@ -1621,7 +1692,11 @@ TranscriptionResult Transcribe(const recording_service::RecordedClip& clip)
 
     cJSON* root = cJSON_ParseWithLength(http.body.c_str(), http.body.size());
     if (http.status_code >= 200 && http.status_code < 300) {
-        result.transcript = TrimForLog(ExtractCandidateText(root), 1U << 20);
+        OrganizedTranscript organized = ParseOrganizedTranscript(ExtractCandidateText(root));
+        result.transcript = TrimForLog(std::move(organized.transcript), 1U << 20);
+        result.suggested_tag = std::move(organized.suggested_tag);
+        result.title = std::move(organized.title);
+        result.due_local = std::move(organized.due_local);
         result.success = !result.transcript.empty();
         if (!result.success) {
             result.error_code = "empty_transcript";
@@ -1720,6 +1795,39 @@ void SetNetworkState(bool connected, bool access_point_mode)
     MaybeBeginAuthentication();
 }
 
+std::string GetTranscriptionLanguage()
+{
+    std::lock_guard<std::mutex> lock(s_language_mutex);
+    if (s_language.empty()) {
+        s_language = LoadLanguageFromNvs();
+    }
+    return s_language;
+}
+
+bool SetTranscriptionLanguage(const std::string& language)
+{
+    if (!IsKnownTranscriptionLanguage(language)) {
+        return false;
+    }
+    nvs_handle_t handle = 0;
+    esp_err_t err = nvs_open(kStorageNamespace, NVS_READWRITE, &handle);
+    if (err == ESP_OK) {
+        err = nvs_set_str(handle, kStorageLanguage, language.c_str());
+        if (err == ESP_OK) {
+            err = nvs_commit(handle);
+        }
+        nvs_close(handle);
+    }
+    if (err != ESP_OK) {
+        ESP_LOGW(kSettingsTag, "Failed to save transcription language: %s", esp_err_to_name(err));
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(s_language_mutex);
+    s_language = language;
+    ESP_LOGI(kSettingsTag, "Transcription language: %s", language.c_str());
+    return true;
+}
+
 void RegisterPortalRoutes(httpd_handle_t server)
 {
     if (server == nullptr) {
@@ -1751,7 +1859,22 @@ void RegisterPortalRoutes(httpd_handle_t server)
         .user_ctx = nullptr,
     };
 
-    if (RegisterPortalRoute(server, &settings_get) != ESP_OK ||
+    httpd_uri_t transcription_get = {
+        .uri = kPortalApiSettingsTranscriptionUri,
+        .method = HTTP_GET,
+        .handler = HandleTranscriptionSettingsGet,
+        .user_ctx = nullptr,
+    };
+    httpd_uri_t transcription_patch = {
+        .uri = kPortalApiSettingsTranscriptionUri,
+        .method = HTTP_PATCH,
+        .handler = HandleTranscriptionSettingsPatch,
+        .user_ctx = nullptr,
+    };
+
+    if (RegisterPortalRoute(server, &transcription_get) != ESP_OK ||
+        RegisterPortalRoute(server, &transcription_patch) != ESP_OK ||
+        RegisterPortalRoute(server, &settings_get) != ESP_OK ||
         RegisterPortalRoute(server, &settings_patch) != ESP_OK ||
         RegisterPortalRoute(server, &settings_reset) != ESP_OK ||
         RegisterPortalRoute(server, &runtime_get) != ESP_OK) {

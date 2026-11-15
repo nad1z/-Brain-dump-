@@ -84,15 +84,17 @@ NavigationModel BuildSettingsPageNavigationModel()
             NavigationItemRole::kSettingsMenuTopics, 4);
     AddItem(model, NavigationItemSection::kSettingsPageMenu,
             NavigationItemRole::kSettingsMenuAbout, 5);
+    AddItem(model, NavigationItemSection::kSettingsPageMenu,
+            NavigationItemRole::kSettingsSilentToggle, 6);
     AddItem(model,
             NavigationItemSection::kSettingsPageMenu,
             NavigationItemRole::kSettingsManualOnboardingButton,
-            6);
+            7);
     AddFooterItems(model, /*is_home_screen=*/false);
     return model;
 }
 
-NavigationModel BuildWifiPageNavigationModel()
+NavigationModel BuildWifiPageNavigationModel(bool include_network_controls)
 {
     NavigationModel model = {};
     model.scope = NavigationScope::kWifi;
@@ -110,28 +112,34 @@ NavigationModel BuildWifiPageNavigationModel()
             1);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageNetworkList,
+            NavigationItemRole::kWifiPageBatterySaverToggle,
             2);
-    AddItem(model,
-            NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPagePasswordInput,
-            3);
-    AddItem(model,
-            NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPagePasswordVisibilityButton,
-            4);
-    AddItem(model,
-            NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageScanButton,
-            5);
-    AddItem(model,
-            NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageConnectButton,
-            6);
+    if (include_network_controls) {
+        AddItem(model,
+                NavigationItemSection::kWifiPageControls,
+                NavigationItemRole::kWifiPageNetworkList,
+                3);
+        AddItem(model,
+                NavigationItemSection::kWifiPageControls,
+                NavigationItemRole::kWifiPagePasswordInput,
+                4);
+        AddItem(model,
+                NavigationItemSection::kWifiPageControls,
+                NavigationItemRole::kWifiPagePasswordVisibilityButton,
+                5);
+        AddItem(model,
+                NavigationItemSection::kWifiPageControls,
+                NavigationItemRole::kWifiPageScanButton,
+                6);
+        AddItem(model,
+                NavigationItemSection::kWifiPageControls,
+                NavigationItemRole::kWifiPageConnectButton,
+                7);
+    }
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
             NavigationItemRole::kWifiPageBackButton,
-            7);
+            8);
     AddFooterItems(model, /*is_home_screen=*/false);
     return model;
 }
@@ -168,9 +176,11 @@ NavigationModel BuildSettingsStoragePageNavigationModel()
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
             NavigationItemRole::kSettingsStorageEnableOtgButton, 0);
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
-            NavigationItemRole::kSettingsStorageFormatSdButton, 1);
+            NavigationItemRole::kSettingsStorageShareButton, 1);
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
-            NavigationItemRole::kSettingsStorageBackButton, 2);
+            NavigationItemRole::kSettingsStorageFormatSdButton, 2);
+    AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
+            NavigationItemRole::kSettingsStorageBackButton, 3);
     AddFooterItems(model, /*is_home_screen=*/false);
     return model;
 }

@@ -43,6 +43,9 @@ void SavePosition(const std::string& filename, size_t offset);
 // Removes the book and its position sidecar (if any) from the configured folder. Returns
 // true if the book file was removed or was already gone; false on an actual I/O error.
 bool DeleteBook(const std::string& filename);
+// Absolute path of the book folder on the mounted SD card (for writers such as share_service's
+// upload, which then calls Init() if the folder may be missing).
+std::string BookFolderPath();
 
 }  // namespace text_reader_service
 

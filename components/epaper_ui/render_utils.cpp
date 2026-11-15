@@ -71,6 +71,14 @@ int CenterOffset(int container_size, int item_size)
     return std::max(0, (container_size - item_size) / 2);
 }
 
+int TextStartX(design::TypographyRole role, std::string_view text, int x, int available_width)
+{
+    if (available_width <= 0 || !epaper_font::IsRightToLeft(text)) {
+        return x;
+    }
+    return x + std::max(0, available_width - MeasureText(role, text));
+}
+
 std::vector<std::string> WrapTextToWidth(design::TypographyRole role,
                                          const std::string& text,
                                          int max_width)
@@ -83,6 +91,10 @@ std::vector<std::string> WrapTextToWidth(design::TypographyRole role,
         lines.push_back(text);
         return lines;
     }
+
+    // Lines of a Hebrew paragraph all read right to left, including one that happens to start
+    // with a Latin word or a number after wrapping.
+    const bool paragraph_rtl = epaper_font::IsRightToLeft(text);
 
     size_t start = 0;
     while (start < text.size()) {
@@ -113,7 +125,11 @@ std::vector<std::string> WrapTextToWidth(design::TypographyRole role,
             pos = word_end + 1;
         }
 
-        lines.push_back(text.substr(start, best_end - start));
+        std::string line = text.substr(start, best_end - start);
+        if (paragraph_rtl && !epaper_font::IsRightToLeft(line)) {
+            line.insert(0, epaper_font::kRightToLeftMarkUtf8);
+        }
+        lines.push_back(std::move(line));
         start = best_end + (best_end < text.size() ? 1 : 0);
     }
     return lines;

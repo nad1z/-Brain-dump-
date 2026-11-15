@@ -212,7 +212,9 @@ void DrawScrollContainer(uint8_t* framebuffer,
                 break;
             }
             DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
-                               viewport.x, y, lines[static_cast<size_t>(index)], style.text_role,
+                               TextStartX(style.text_role, lines[static_cast<size_t>(index)],
+                                          viewport.x, viewport.width),
+                               y, lines[static_cast<size_t>(index)], style.text_role,
                                style.text_color);
             y += stride;
         }

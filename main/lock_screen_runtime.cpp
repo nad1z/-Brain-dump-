@@ -19,6 +19,7 @@
 #include "freertos/task.h"
 #include "recording_archive_service.h"
 #include "status_bar_runtime.h"
+#include "epaper_ui/text_shaping.h"
 #include "timeline_format.h"
 #include "ui_refresh_runtime.h"
 
@@ -112,7 +113,15 @@ bool IsPendingTodo(const recording_archive_service::RecordingEntry& entry)
 std::string TodoDisplayText(const recording_archive_service::RecordingEntry& entry)
 {
     const std::string trimmed = timeline_format::TrimTranscript(entry.transcript_text);
-    return entry.metadata.has_transcript && !trimmed.empty() ? trimmed : "Audio only todo.";
+    std::string text =
+        entry.metadata.has_transcript && !trimmed.empty() ? trimmed : "Audio only todo.";
+    const std::string due = timeline_format::FormatDueLabel(entry.metadata.due_local);
+    if (due.empty()) {
+        return text;
+    }
+    // A Hebrew todo keeps reading right to left even though the due label in front is Latin.
+    const char* direction = epaper_font::IsRightToLeft(text) ? epaper_font::kRightToLeftMarkUtf8 : "";
+    return std::string(direction) + due + ": " + text;
 }
 
 esp_err_t UpdateDisplayState()
@@ -153,15 +162,25 @@ void TodoSummaryWorkerTask(void*)
         ESP_LOGW(kTag, "Todo summary refresh: list recordings failed: %s",
                  esp_err_to_name(list_status));
     } else {
-        // Follow-up flagged todos surface first (newest first within each group), then rest.
+        // Reminders with a due date surface first, soonest (and overdue) at the top; then
+        // follow-up flagged todos, then the rest (newest first within those two groups).
+        std::vector<const recording_archive_service::RecordingEntry*> dated;
         std::vector<const recording_archive_service::RecordingEntry*> follow_up_first;
         std::vector<const recording_archive_service::RecordingEntry*> rest;
         for (const auto& entry : entries) {
             if (!IsPendingTodo(entry)) {
                 continue;
             }
+            if (!entry.metadata.due_local.empty()) {
+                dated.push_back(&entry);
+                continue;
+            }
             (entry.metadata.follow_up ? follow_up_first : rest).push_back(&entry);
         }
+        // due_local is "YYYY-MM-DD[THH:MM]", so plain string order is chronological order.
+        std::sort(dated.begin(), dated.end(), [](const auto* a, const auto* b) {
+            return a->metadata.due_local < b->metadata.due_local;
+        });
         const auto by_recency = [](const auto* a, const auto* b) {
             return EntryTimestamp(*a) > EntryTimestamp(*b);
         };
@@ -170,7 +189,7 @@ void TodoSummaryWorkerTask(void*)
 
         std::vector<std::string> titles;
         titles.reserve(kMaxPendingTodoTitles);
-        for (auto* group : {&follow_up_first, &rest}) {
+        for (auto* group : {&dated, &follow_up_first, &rest}) {
             for (const auto* entry : *group) {
                 if (titles.size() >= kMaxPendingTodoTitles) {
                     break;
@@ -178,7 +197,8 @@ void TodoSummaryWorkerTask(void*)
                 titles.push_back(TodoDisplayText(*entry));
             }
         }
-        const int pending_count = static_cast<int>(follow_up_first.size() + rest.size());
+        const int pending_count =
+            static_cast<int>(dated.size() + follow_up_first.size() + rest.size());
 
         epaper_ui::LockScreenState state = {};
         bool active = false;

@@ -41,6 +41,7 @@ MenuContainerStyle MenuStyle(int width)
 
 struct Layout {
     int menu_y = 0;
+    UiRect silent_toggle = {};
     UiRect manual_button = {};
 };
 
@@ -60,7 +61,11 @@ Layout BuildLayout(int portrait_width, int portrait_height, const SettingsPageSt
     ButtonStyle manual_style = {};
     manual_style.width = page_width;
     manual_style.center_label = true;
-    layout.manual_button = ButtonBounds(kSideInset, menu_bounds.bottom() + kMenuManualGap,
+    MenuToggleStyle silent_style = {};
+    silent_style.width = page_width;
+    silent_style.bottom_border_thickness = 0;
+    layout.silent_toggle = MenuToggleBounds(kSideInset, menu_bounds.bottom(), silent_style);
+    layout.manual_button = ButtonBounds(kSideInset, layout.silent_toggle.bottom() + kMenuManualGap,
                                         state.manual_button, manual_style);
     return layout;
 }
@@ -109,6 +114,13 @@ bool HitTestSettingsMenuItem(int portrait_width,
         }
     }
     return false;
+}
+
+UiRect SettingsSilentToggleBounds(int portrait_width,
+                                  int portrait_height,
+                                  const SettingsPageState& state)
+{
+    return BuildLayout(portrait_width, portrait_height, state).silent_toggle;
 }
 
 UiRect SettingsManualButtonBounds(int portrait_width,
@@ -163,12 +175,19 @@ void DrawSettingsPage(uint8_t* framebuffer,
         MenuItemStyle item_style = {};
         item_style.width = bounds.width;
         item_style.height = bounds.height;
-        if (index == kSettingsMenuItemCount - 1) {
-            item_style.bottom_border_thickness = 0;  // no separator under the last row
-        }
         DrawMenuItem(framebuffer, raw_width, raw_height, portrait_width, portrait_height, bounds.x,
                     bounds.y, item, item_style);
     }
+
+    MenuToggleStyle silent_style = {};
+    silent_style.width = layout.silent_toggle.width;
+    silent_style.bottom_border_thickness = 0;
+    // Same type and inset as the menu rows above, so the switch reads as part of the list.
+    silent_style.role = design::TypographyRole::kLabelXL;
+    silent_style.horizontal_padding = design::menu_item::kHorizontalPadding;
+    DrawMenuToggle(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+                   layout.silent_toggle.x, layout.silent_toggle.y, state.silent_toggle,
+                   silent_style);
 
     ButtonStyle manual_style = {};
     manual_style.width = layout.manual_button.width;

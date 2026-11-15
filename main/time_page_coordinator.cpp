@@ -32,6 +32,12 @@ std::string Pad2(int value)
     return std::string(buffer);
 }
 
+int To12Hour(int hour24)
+{
+    const int hour12 = hour24 % 12;
+    return hour12 == 0 ? 12 : hour12;
+}
+
 }  // namespace
 
 TimePageCoordinator::TimePageCoordinator() = default;
@@ -56,12 +62,9 @@ void TimePageCoordinator::LoadFromSnapshot(const timezone_service::Snapshot& sna
     const std::array<std::string, 3> time = Split3(snapshot.runtime.current_time, ':');
     const int hour24 = std::atoi(time[0].c_str());
     minute_ = time[1].empty() ? std::string("00") : time[1];
+    use_24_hour_ = snapshot.settings.use_24_hour;
     meridiem_pm_ = hour24 >= 12;
-    int hour12 = hour24 % 12;
-    if (hour12 == 0) {
-        hour12 = 12;
-    }
-    hour_ = Pad2(hour12);
+    hour_ = use_24_hour_ ? Pad2(hour24) : Pad2(To12Hour(hour24));
 }
 
 void TimePageCoordinator::RefreshFromService(
@@ -160,7 +163,20 @@ void TimePageCoordinator::SetYear(const std::string& value)
 
 void TimePageCoordinator::ToggleMeridiem()
 {
-    meridiem_pm_ = !meridiem_pm_;
+    // One button cycles AM -> PM -> 24H -> AM. Entering 24H keeps the same moment (the hour
+    // digits are converted); leaving it lands on AM with the hour shown in 12-hour digits.
+    if (use_24_hour_) {
+        const int hour24 = ((std::atoi(hour_.c_str()) % 24) + 24) % 24;
+        hour_ = Pad2(To12Hour(hour24));
+        use_24_hour_ = false;
+        meridiem_pm_ = false;
+    } else if (!meridiem_pm_) {
+        meridiem_pm_ = true;
+    } else {
+        const int hour24 = (std::atoi(hour_.c_str()) % 12) + 12;
+        hour_ = Pad2(hour24);
+        use_24_hour_ = true;
+    }
     user_edited_ = true;
 }
 
@@ -177,11 +193,17 @@ timezone_service::SettingsPatch TimePageCoordinator::BuildSettingsPatch() const
     patch.has_timezone_name = true;
     patch.timezone_name = timezone_name_;
 
-    int hour12 = std::atoi(hour_.c_str());
-    int hour24 = hour12 % 12;
-    if (meridiem_pm_) {
-        hour24 += 12;
+    int hour24 = 0;
+    if (use_24_hour_) {
+        hour24 = ((std::atoi(hour_.c_str()) % 24) + 24) % 24;
+    } else {
+        hour24 = std::atoi(hour_.c_str()) % 12;
+        if (meridiem_pm_) {
+            hour24 += 12;
+        }
     }
+    patch.has_use_24_hour = true;
+    patch.use_24_hour = use_24_hour_;
     patch.has_manual_datetime = true;
     patch.manual_date = year_ + "-" + month_ + "-" + day_;
     patch.manual_time = Pad2(hour24) + ":" + (minute_.empty() ? std::string("00") : minute_);
@@ -208,7 +230,7 @@ epaper_ui::TimePageState TimePageCoordinator::BuildState() const
     state.minute.max_length = 2;
     state.minute.focused = IsRoleFocused(NavigationItemRole::kTimePageMinute);
 
-    state.meridiem.label_text = meridiem_pm_ ? "PM" : "AM";
+    state.meridiem.label_text = use_24_hour_ ? "24H" : (meridiem_pm_ ? "PM" : "AM");
     state.meridiem.selected = IsRoleFocused(NavigationItemRole::kTimePageMeridiem);
 
     state.month.value_text = month_;

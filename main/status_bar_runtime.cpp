@@ -35,9 +35,13 @@ std::string BuildTimeText()
 {
     const timezone_service::Snapshot snapshot = timezone_service::GetSnapshot();
     const std::string& time24 = snapshot.runtime.current_time;
-    // current_time is "HH:MM" 24-hour; present it as 12-hour with an AM/PM suffix.
+    // current_time is "HH:MM" 24-hour; show it as-is when the user chose the 24-hour clock,
+    // otherwise present it as 12-hour with an AM/PM suffix.
     if (time24.size() < 5 || time24[2] != ':') {
         return "--:--";
+    }
+    if (snapshot.settings.use_24_hour) {
+        return time24.substr(0, 5);
     }
     const int hour24 = ((time24[0] - '0') * 10) + (time24[1] - '0');
     const bool pm = hour24 >= 12;

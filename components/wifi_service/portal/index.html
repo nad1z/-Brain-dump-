@@ -3,21 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chroninkle Setup</title>
+    <title>Brain Dump Setup</title>
     <script type="module" crossorigin src="./index.js"></script>
     <link rel="stylesheet" crossorigin href="./index.css">
   </head>
   <body>
-    <main role="main" aria-label="Chroninkle Setup">
-      <div id="brandLogo" class="brand-logo" aria-hidden="true">Chroninkle</div>
+    <main role="main" aria-label="Brain Dump Setup">
+      <div id="brandLogo" class="brand-logo" aria-hidden="true">Brain Dump</div>
 
       <div class="connected-components">
+        <ui-card id="shareSignInCard" title="Enter PIN" hidden>
+            <p class="form-helper-text">
+              Enter the four-digit PIN shown on the Brain Dump screen.
+            </p>
+            <ui-input
+              id="sharePinInput"
+              label="PIN"
+              placeholder="0000"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="4"
+            ></ui-input>
+            <ui-button slot="footer" id="sharePinBtn" variant="primary">Open</ui-button>
+        </ui-card>
+
+        <ui-card id="recordingsCard" title="Recordings" hidden>
+            <p id="recordingsSummary" class="form-helper-text">Loading…</p>
+            <ul id="recordingsList" class="share-list"></ul>
+            <ui-button slot="footer" id="recordingsRefreshBtn" variant="secondary">Refresh</ui-button>
+            <ui-button slot="footer" id="recordingsExportBtn" variant="primary">
+              Export for Obsidian
+            </ui-button>
+        </ui-card>
+
+        <ui-card id="booksCard" title="Books" hidden>
+            <ul id="booksList" class="share-list"></ul>
+            <ui-file-upload
+              id="bookFileInput"
+              label="Add a book"
+              aria-label="Book file"
+              accept=".txt,.epub,text/plain,application/epub+zip"
+              warning-text="Plain text or EPUB. An EPUB is converted to plain text here, on this phone or computer, before it is sent."
+            ></ui-file-upload>
+            <ui-button slot="footer" id="bookUploadBtn" variant="primary">Add Book</ui-button>
+        </ui-card>
+
         <ui-network-status id="wifiStatusCard"></ui-network-status>
 
         <ui-bottom-sheet
           id="wifiSettingsSheet"
           title="WiFi Settings"
-          description="Scan for available networks and connect your Chroninkle to WiFi."
+          description="Scan for available networks and connect your Brain Dump to WiFi."
         >
           <ui-icon-button
             id="wifiSettingsCloseBtn"
@@ -77,6 +113,21 @@
               inputmode="text"
             ></ui-input>
 
+            <ui-select
+              id="transcriptionLanguageSelect"
+              label="Language you speak"
+              aria-label="Transcription language"
+            >
+              <option value="auto">Detect automatically</option>
+              <option value="he">Hebrew</option>
+              <option value="en">English</option>
+              <option value="he+en">Hebrew and English mixed</option>
+            </ui-select>
+            <p class="form-helper-text">
+              Recordings are transcribed in this language and never translated. Saved as soon as
+              you change it.
+            </p>
+
             <ui-button
               slot="footer"
               id="geminiClearBtn"
@@ -134,6 +185,26 @@
               variant="primary"
             >
               Save
+            </ui-button>
+        </ui-card>
+
+        <ui-card id="firmwareUpdateCard" title="Firmware Update">
+            <p id="firmwareVersionText" class="form-helper-text">Installed version: …</p>
+
+            <ui-file-upload
+              id="firmwareFileInput"
+              label="Update file"
+              aria-label="Firmware update file"
+              accept=".bin,application/octet-stream"
+              warning-text="Choose the file ending in -update.bin. The device restarts by itself when the update is installed."
+            ></ui-file-upload>
+
+            <ui-button
+              slot="footer"
+              id="firmwareUploadBtn"
+              variant="primary"
+            >
+              Install Update
             </ui-button>
         </ui-card>
       </div>

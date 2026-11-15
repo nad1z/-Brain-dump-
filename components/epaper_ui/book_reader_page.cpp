@@ -147,6 +147,14 @@ void TransliterateUtf8Punctuation(std::string& text)
             continue;
         }
 
+        if ((codepoint >= 0x0590 && codepoint <= 0x05FF) ||
+            codepoint == epaper_font::kLeftToRightMark ||
+            codepoint == epaper_font::kRightToLeftMark) {
+            // Hebrew: the text renderer draws these itself, leave the bytes untouched.
+            i += static_cast<size_t>(seq_len);
+            continue;
+        }
+
         const char* replacement = "?";
         switch (codepoint) {
             case 0x2018: case 0x2019: case 0x201A: case 0x2032:
@@ -248,7 +256,14 @@ BookReaderPageLayout PaginateBookText(int portrait_width, int portrait_height,
         // NormalizeLineBreaks leaves '\n' nowhere except as this marker, so its presence right
         // at the line's end boundary is unambiguous, however the loop above stopped.
         const bool paragraph_break_follows = best_end < text.size() && text[best_end] == '\n';
-        result.lines.push_back(text.substr(start, best_end - start));
+        std::string line = text.substr(start, best_end - start);
+        // Paragraph direction is not tracked across pages, so a line that contains Hebrew is
+        // taken to belong to a Hebrew paragraph even when wrapping left a Latin word or a
+        // number at its start.
+        if (epaper_font::ContainsHebrew(line) && !epaper_font::IsRightToLeft(line)) {
+            line.insert(0, epaper_font::kRightToLeftMarkUtf8);
+        }
+        result.lines.push_back(std::move(line));
         start = best_end + (best_end < text.size() ? 1 : 0);
         if (paragraph_break_follows && static_cast<int>(result.lines.size()) < max_lines) {
             result.lines.push_back({});  // blank line rendered for the paragraph gap
@@ -293,7 +308,8 @@ void DrawBookReaderPage(uint8_t* framebuffer,
             break;
         }
         DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
-                           layout.content.x, line_y, line, kBodyRole, design::color::kBlack);
+                           TextStartX(kBodyRole, line, layout.content.x, layout.content.width),
+                           line_y, line, kBodyRole, design::color::kBlack);
         line_y += line_height;
     }
 

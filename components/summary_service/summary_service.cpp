@@ -166,6 +166,8 @@ std::string BuildSummaryInstructionText(const SummaryTarget& target, bool interm
                       "blockers, noting completion state when it is clear from the source. Keep it "
                       "concise, factual, and easy to skim. Avoid markdown tables.\n\n";
     }
+    text += "Write the summary in the same language as the source transcripts (for example, "
+            "Hebrew sources get a Hebrew summary).\n\n";
     return text;
 }
 

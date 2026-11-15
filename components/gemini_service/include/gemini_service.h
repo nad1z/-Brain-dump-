@@ -91,6 +91,12 @@ struct TranscriptionResult {
     bool success = false;
     int http_status = 0;
     std::string transcript = {};
+    // Worked out by the model in the same request (all optional, empty when not given):
+    // "note" | "task" | "idea"; a short English title; and a due date/time in local time
+    // ("YYYY-MM-DD" or "YYYY-MM-DDTHH:MM") when the speaker names one.
+    std::string suggested_tag = {};
+    std::string title = {};
+    std::string due_local = {};
     std::string error_code = {};
     std::string error_message = {};
     uint32_t clip_duration_ms = 0;
@@ -124,6 +130,10 @@ bool BeginAuthentication();
 // time, in submission order; never call this from a UI/input task with a job that blocks.
 void RunOnWorker(std::function<void()> job);
 void SetNetworkState(bool connected, bool access_point_mode);
+// Spoken language for transcription: "auto" (default), "he", "en" or "he+en". Stored in NVS
+// ("gemini"/"lang") and sent in the transcription prompt; set from the web page.
+std::string GetTranscriptionLanguage();
+bool SetTranscriptionLanguage(const std::string& language);
 void RegisterPortalRoutes(httpd_handle_t server);
 
 const char* ApiKeySourceName(ApiKeySource source);

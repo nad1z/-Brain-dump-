@@ -40,7 +40,9 @@ constexpr size_t kSignalWindowSamples = 240;
 constexpr int32_t kSpeechPeakThreshold = 700;
 constexpr size_t kMinSpeechWindows = 3;
 
-constexpr std::array<TagOption, 5> kTagOptions = {{
+constexpr std::array<TagOption, 6> kTagOptions = {{
+    // First, so a single confirm press files the recording without choosing anything.
+    {.label_text = "Auto", .is_auto = true},
     {.tag = recording_archive_service::RecordingTag::kNote, .label_text = "Note"},
     {.tag = recording_archive_service::RecordingTag::kTask, .label_text = "Task"},
     {.tag = recording_archive_service::RecordingTag::kIdea, .label_text = "Idea"},
@@ -473,7 +475,7 @@ void SetNetworkConnected(bool connected)
     s_network_connected.store(connected, std::memory_order_relaxed);
 }
 
-const std::array<TagOption, 5>& TagOptions()
+const std::array<TagOption, 6>& TagOptions()
 {
     return kTagOptions;
 }
@@ -756,6 +758,7 @@ bool SubmitTagSelection(int selected_index)
 
     recording_archive_service::SaveOptions options = {};
     options.tag = kTagOptions[static_cast<size_t>(selected_index)].tag;
+    options.auto_tag = kTagOptions[static_cast<size_t>(selected_index)].is_auto;
     const bool gemini_ready = s_network_connected.load(std::memory_order_relaxed) &&
                               gemini_service::GetSnapshot().runtime.ready;
     options.pending_transcription = !gemini_ready;
@@ -914,6 +917,7 @@ void HandleTranscriptionEvent(const transcription_service::Event& event)
     bool should_attach_transcript = false;
     std::string pending_recording_id;
     std::string transcript_text;
+    recording_archive_service::Organization organization = {};
     {
         std::lock_guard<std::mutex> lock(s_mutex);
         s_snapshot.request_in_flight = event.snapshot.request_in_flight;
@@ -922,6 +926,9 @@ void HandleTranscriptionEvent(const transcription_service::Event& event)
             should_attach_transcript = true;
             pending_recording_id = s_pending_recording_id;
             transcript_text = event.snapshot.last_transcript;
+            organization = recording_archive_service::OrganizationFromSuggestion(
+                event.snapshot.last_suggested_tag, event.snapshot.last_title,
+                event.snapshot.last_due_local);
         }
     }
 
@@ -932,6 +939,9 @@ void HandleTranscriptionEvent(const transcription_service::Event& event)
                  static_cast<unsigned>(transcript_text.size()));
         const recording_archive_service::SaveResult save_result =
             recording_archive_service::SaveTranscript(pending_recording_id, transcript_text);
+        if (save_result.transcript_saved) {
+            (void)recording_archive_service::ApplyOrganization(pending_recording_id, organization);
+        }
         ESP_LOGI(kTag,
                  "Transcript save result: success=%d transcript_saved=%d metadata_saved=%d transcript=%s metadata=%s error=%s",
                  save_result.success ? 1 : 0,

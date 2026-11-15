@@ -47,6 +47,12 @@ AudioCodec* BeginPlayback(const char* what)
         s_playing.store(false, std::memory_order_relaxed);
         return nullptr;
     }
+    if (!codec->output_enabled()) {
+        // Silent mode (feedback_service) turned the speaker off.
+        ESP_LOGI(kTag, "Speaker is off (silent mode); not playing %s", what);
+        s_playing.store(false, std::memory_order_relaxed);
+        return nullptr;
+    }
     return codec;
 }
 

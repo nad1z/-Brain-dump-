@@ -191,6 +191,11 @@ void SavePosition(const std::string& filename, size_t offset)
     std::fclose(file);
 }
 
+std::string BookFolderPath()
+{
+    return FolderPath();
+}
+
 bool DeleteBook(const std::string& filename)
 {
     // Sidecar first: if the process is interrupted between the two removals, leaving a

@@ -80,7 +80,7 @@ built-in sdkconfig fallback key.
 
 ## Build-Time Configuration
 
-The build-time Gemini setting lives under `Chroninkle Settings`:
+The build-time Gemini setting lives under `Brain Dump Settings`:
 
 - `CONFIG_CHRONINKLE_GEMINI_API_KEY`
 

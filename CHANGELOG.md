@@ -8,6 +8,103 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added (sound and language)
+
+- **Silent mode** switch on the Settings screen: turns the codec output
+  and the speaker amplifier off (NVS `feedback`/`silent`), so cues, the
+  post-recording review and Details playback are all skipped; recording
+  still works and goes straight to the save menu.
+- **Transcription language** on the setup page's Gemini section: Detect
+  automatically / Hebrew / English / Hebrew and English mixed (NVS
+  `gemini`/`lang`, `GET`/`PATCH /api/settings/transcription`). Gemini's
+  API has no language parameter for audio, so the choice is stated in the
+  prompt, together with an explicit "never translate". This fixes Hebrew
+  recordings sometimes coming back translated to English. Titles now follow
+  the transcript's language instead of always being English.
+
+### Changed (Wi-Fi page)
+
+- With Wi-Fi switched off, the Wi-Fi page hides the network list, password
+  and Scan/Connect, and they leave the focus order.
+
+### Added (sharing)
+
+- **Share over WiFi** (Settings > Storage). Starts a PIN-protected web page
+  on the home network (new `share_service`; four-digit PIN shown on the
+  device, five wrong tries lock it for a minute; stops after 10 idle
+  minutes, on Wi-Fi disconnect, or from the device). The page lists
+  recordings with transcript, type, title and due date, downloads audio,
+  exports everything as one Obsidian-ready Markdown file, and adds or
+  deletes books. EPUB books are converted to plain text in the browser, so
+  the device never unzips or parses HTML. The same Recordings and Books
+  sections appear on the setup hotspot page.
+- Web page tests: Markdown export unit tests and a Chromium test of the
+  share page against a fake device (PIN gate, list, export, audio
+  download, EPUB conversion and upload); CI also checks the committed
+  portal files match the web source.
+
+### Added (battery)
+
+- **Battery saver** switch on the Wi-Fi page (off by default). It keeps the
+  radio off and brings it up in bursts to send recordings waiting for a
+  transcript: when three are waiting, when one has waited 30 minutes, or
+  on USB power. Switching Wi-Fi on while it is enabled means "sync now".
+  A wake that cannot connect gives up after 2 minutes and backs off for
+  15. The decision logic is a pure function with host tests.
+- The Wi-Fi page's switch rows and spacing are slightly tighter to make
+  room for the new switch without shrinking the network list.
+
+### Changed
+
+- **Renamed to Brain Dump.** The boot splash shows a Brain Dump mark and
+  credits Chroninkle, Followup and ALXV Labs under "Based on"; onboarding,
+  the About page, the setup web page and the manual use the new name; the
+  setup hotspot is now `BrainDump-XXXXXX`; the firmware image is
+  `braindump.bin`. Internal identifiers (`CONFIG_CHRONINKLE_*`, namespaces)
+  keep the upstream name.
+
+### Added
+
+- **Auto filing.** The save menu has a new first choice, **Auto**: the same
+  request that transcribes a recording now also returns its type
+  (Note/Task/Idea), a short English title and, when a day or time was
+  spoken, a due date. Auto recordings take the suggested type; a type
+  picked by hand is never overridden. Title and due date are stored in the
+  recording's metadata (`title`, `due_local`) for the upcoming reminders
+  and calendar work; they are not shown on the device yet.
+- **Reminders on the lock screen.** Pending Tasks that have a due date are
+  listed first on the lock screen, soonest first, labelled "Today 09:30",
+  "Tomorrow", "Overdue" or the date.
+- Firmware updates are refused when the battery is below 30% and the
+  device is not plugged in.
+
+- **Hebrew on screen.** Transcripts, list previews, summaries, lock-screen
+  to-dos and Books now draw Hebrew right to left (Heebo glyphs for the
+  letter block, a compact bidirectional layout for mixed Hebrew/English/
+  numbers, right alignment for Hebrew lines). English-only text takes the
+  same fast path as before. The transcription prompt now says not to
+  translate, and summaries are requested in the source language.
+
+- **Firmware updates over Wi-Fi.** The setup web page has a new Firmware
+  Update section: it shows the installed version and installs an uploaded
+  update file into the spare firmware slot, then restarts the device. Files
+  that aren't a Chroninkle firmware image, or that fail verification, are
+  refused without changing anything (new `firmware_update_service`
+  component; `POST /api/update`, `GET /api/runtime/update`).
+- **Tests.** 38 host tests (`tests/host/`) cover the 24-hour clock, Hebrew
+  decoding/ordering/wrapping/alignment, the model-reply parser behind Auto
+  filing, and reminder due labels. They run on a computer and in CI and are
+  not compiled into the firmware.
+- **Automatic builds.** GitHub Actions now compiles the firmware on every
+  push and attaches the update file and a full USB-flash image, plus PNG
+  previews of device screens rendered on a computer (`tools/preview/`).
+
+- A **24-hour clock** option. On the Time page the AM/PM button now cycles
+  AM, PM and 24H; saving with 24H selected shows the status bar clock and
+  every recording's time as `HH:MM` with no AM/PM. The choice is stored on
+  the device (`timezone` NVS namespace, `hour24`) and is also readable and
+  settable through the time settings API as `use_24_hour`.
+
 ## [1.0.0] - 2026-09-24
 
 This is the last planned release before v2, a complete front-end rewrite

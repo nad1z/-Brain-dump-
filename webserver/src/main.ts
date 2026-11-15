@@ -4,6 +4,7 @@ import {
   defineBottomSheet,
   defineButton,
   defineCard,
+  defineFileUpload,
   defineIconButton,
   defineInput,
   defineNetworkList,
@@ -22,7 +23,11 @@ import wifiFindIcon from './assets/wifi_find.svg?raw';
 import apiKeyIcon from './assets/api_key.svg?raw';
 import checkIcon from './assets/check.svg?raw';
 import clockIcon from './assets/clock.svg?raw';
+import firmwareUpdateIcon from './assets/firmware_update.svg?raw';
+import reminderIcon from './assets/reminder.svg?raw';
+import infoIcon from './assets/info.svg?raw';
 import {
+  fetchApiJson,
   fetchGeminiModuleJson,
   fetchPortalJson,
   fetchTimeRuntimeJson,
@@ -54,12 +59,15 @@ import {
   svgWithClass,
 } from './portal/uiHelpers';
 import { parseClockTimeInputValue } from './portal/duration';
+import { createFirmwareUpdateController } from './portal/firmwareUpdate';
 import { createProviderKeysController } from './portal/providerKeys';
+import { createShareController, detectShareMode, type ShareDom } from './portal/share';
 import { createTimeController } from './portal/time';
 import { createWiFiController } from './portal/wifi';
 import { bindPortalEvents } from './portal/events';
 import { updatePortalUiState } from './portal/uiState';
 import type {
+  CardField,
   OpenAiModuleResponse,
   TalkingClockModuleResponse,
   ValidatableField,
@@ -68,6 +76,7 @@ import type {
 defineBottomSheet();
 defineButton();
 defineCard();
+defineFileUpload();
 defineIconButton();
 defineInput();
 defineNetworkList();
@@ -181,6 +190,16 @@ const wifiController = createWiFiController({
   wifiStatusCard: dom.wifiStatusCard,
 });
 
+const firmwareUpdateCard = document.getElementById('firmwareUpdateCard') as CardField;
+const firmwareUpdateController = createFirmwareUpdateController({
+  card: firmwareUpdateCard,
+  fileInput: document.getElementById('firmwareFileInput') as Parameters<
+    typeof createFirmwareUpdateController
+  >[0]['fileInput'],
+  uploadBtn: document.getElementById('firmwareUploadBtn') as HTMLButtonElement,
+  versionText: document.getElementById('firmwareVersionText') as HTMLElement,
+});
+
 function updatePageFade() {
   if (!pageFade) {
     return;
@@ -197,6 +216,8 @@ function initialize() {
   dom.wifiStatusCard.iconSvg = wifiIcon;
   dom.geminiCard.iconSvg = apiKeyIcon;
   dom.timezoneLocationCard.iconSvg = clockIcon;
+  firmwareUpdateCard.iconSvg = firmwareUpdateIcon;
+  firmwareUpdateController.bind();
 
   wifiController.renderNetworkList();
 
@@ -259,7 +280,40 @@ async function loadInitialStatus() {
     timeController.fetchTimeSettingsStatus(),
     wifiController.checkStatus(),
     loadGeminiSettings(),
+    loadTranscriptionLanguage(),
+    firmwareUpdateController.refreshVersion(),
   ]);
+}
+
+async function loadTranscriptionLanguage() {
+  const select = document.getElementById('transcriptionLanguageSelect') as ValidatableField | null;
+  if (!select) {
+    return;
+  }
+  try {
+    const data = await fetchApiJson<{ success: boolean; language?: string }>(
+      '/api/settings/transcription'
+    );
+    if (data.language) {
+      select.value = data.language;
+    }
+  } catch (error) {
+    console.error('Transcription language load failed:', error);
+  }
+  select.addEventListener('change', async () => {
+    try {
+      await fetchApiJson('/api/settings/transcription', {
+        method: 'PATCH',
+        body: JSON.stringify({ language: select.value }),
+      });
+      setGeminiNotification('Transcription language saved.', 'success');
+    } catch (error) {
+      setGeminiNotification(
+        error instanceof Error ? error.message : 'Could not save the language.',
+        'error'
+      );
+    }
+  });
 }
 
 async function loadGeminiSettings() {
@@ -273,4 +327,39 @@ async function loadGeminiSettings() {
   }
 }
 
-initialize();
+void boot();
+
+// Share mode (the device's "Share over WiFi", on the home network) shows only Recordings and
+// Books, behind a PIN. On the setup hotspot everything is shown, Recordings and Books included.
+async function boot() {
+  const mode = await detectShareMode();
+  const shareDom: ShareDom = {
+    signInCard: document.getElementById('shareSignInCard') as CardField,
+    pinInput: document.getElementById('sharePinInput') as ValidatableField,
+    pinButton: document.getElementById('sharePinBtn') as HTMLButtonElement,
+    recordingsCard: document.getElementById('recordingsCard') as CardField,
+    recordingsSummary: document.getElementById('recordingsSummary') as HTMLElement,
+    recordingsList: document.getElementById('recordingsList') as HTMLElement,
+    recordingsRefreshButton: document.getElementById('recordingsRefreshBtn') as HTMLButtonElement,
+    recordingsExportButton: document.getElementById('recordingsExportBtn') as HTMLButtonElement,
+    booksCard: document.getElementById('booksCard') as CardField,
+    booksList: document.getElementById('booksList') as HTMLElement,
+    bookFileInput: document.getElementById('bookFileInput') as ShareDom['bookFileInput'],
+    bookUploadButton: document.getElementById('bookUploadBtn') as HTMLButtonElement,
+  };
+  shareDom.recordingsCard.iconSvg = reminderIcon;
+  shareDom.booksCard.iconSvg = infoIcon;
+  shareDom.signInCard.iconSvg = apiKeyIcon;
+
+  if (mode === 'share') {
+    for (const id of ['wifiStatusCard', 'wifiSettingsSheet', 'geminiCard', 'timezoneLocationCard', 'firmwareUpdateCard']) {
+      document.getElementById(id)?.setAttribute('hidden', '');
+    }
+    await createShareController(shareDom, 'share').start();
+    return;
+  }
+  initialize();
+  if (mode === 'setup') {
+    await createShareController(shareDom, 'setup').start();
+  }
+}

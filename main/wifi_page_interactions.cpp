@@ -22,6 +22,15 @@ ActivateResult HandlePrimaryActivate(WifiPageCoordinator& coordinator)
             .apply_page_state = true,
         };
     }
+    if (coordinator.IsRoleFocused(
+            page_navigation::NavigationItemRole::kWifiPageBatterySaverToggle)) {
+        return {
+            .intent = ActivateIntent::kToggleBatterySaver,
+            .handled = true,
+            .play_activate_cue = true,
+            .apply_page_state = true,
+        };
+    }
     if (coordinator.IsRoleFocused(page_navigation::NavigationItemRole::kWifiPageBackButton)) {
         // Returns to the Settings hub -- this page is only ever reached from there now, so
         // there's no other source to track (unlike Details' multi-source back button).
@@ -131,6 +140,11 @@ void ApplyPrimaryActivateResult(const ActivateResult& result,
                 callbacks.toggle_wifi();
             }
             return;
+        case ActivateIntent::kToggleBatterySaver:
+            if (callbacks.toggle_battery_saver) {
+                callbacks.toggle_battery_saver();
+            }
+            break;
         case ActivateIntent::kToggleAccessPoint:
             if (callbacks.toggle_access_point) {
                 callbacks.toggle_access_point();

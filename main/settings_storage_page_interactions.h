@@ -15,6 +15,7 @@ enum class ActivateIntent : uint8_t {
     kShowSettings,
     kEnableOtg,
     kShowFormatSdModal,
+    kToggleSharing,
 };
 
 struct ActivateResult {
@@ -30,6 +31,7 @@ struct ActivateCallbacks {
     std::function<void()> show_settings;
     std::function<void()> enable_otg;
     std::function<void()> show_format_sd_modal;
+    std::function<void()> toggle_sharing;
 };
 
 ActivateResult HandlePrimaryActivate(const SettingsStoragePageCoordinator& coordinator);

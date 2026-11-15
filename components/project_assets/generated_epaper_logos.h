@@ -6,10 +6,13 @@
 namespace epaper_logos {
 
 extern const EmbeddedImageAsset kAlxvLabsLogo;
+extern const EmbeddedImageAsset kBrainDumpLogoStacked;
 extern const EmbeddedImageAsset kChroninkleIcon;
 extern const EmbeddedImageAsset kChroninkleLogo;
 extern const EmbeddedImageAsset kChroninkleLogoStacked;
+extern const EmbeddedImageAsset kChroninkleLogoSmall;
 extern const EmbeddedImageAsset kFollowupLogo;
+extern const EmbeddedImageAsset kFollowupLogoSmall;
 
 }  // namespace epaper_logos
 

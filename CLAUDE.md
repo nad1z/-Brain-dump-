@@ -4,6 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
+**This repository is Brain Dump, a fork of Chroninkle.** Everything a user sees carries the
+Brain Dump name: boot splash (`epaper_ui/splash_screen.cpp`, which credits Chroninkle and
+Followup under "Based on"), onboarding, the About page, the setup web page, the Wi-Fi hotspot
+prefix (`BrainDump-`), the CMake project name (`braindump`, so the app image is
+`braindump.bin`) and the user manual. Internal identifiers deliberately keep the upstream
+name -- the `CONFIG_CHRONINKLE_*` Kconfig namespace, `chroninkle_task_config`, namespaces and
+log strings -- so upstream changes keep merging; do not mass-rename them. The rest of this
+file describes the firmware as inherited from Chroninkle and uses that name.
+
 Chroninkle is an ESP-IDF C++17 firmware application for the [Waveshare
 ESP32-S3-ePaper-3.97](https://docs.waveshare.com/ESP32-S3-ePaper-3.97) (800x480
 mono e-paper, buttons only — no touch controller, ES8311 audio codec + NS4150B
@@ -37,7 +46,15 @@ lives in `docs/waveshare-epaper-hardware-spec.md`.
 
 ## Commands
 
-This is an ESP-IDF project; there is no unit test suite. **Do not automatically
+This is an ESP-IDF project. There is no on-device test suite, but there are **host tests**
+under `tests/host/` (`tests/host/run.sh`, needs `g++` and `libcjson-dev`): they compile the
+pure parts of the firmware (text shaping/fonts/wrapping in `epaper_ui`, `page_navigation`,
+`main/timeline_format.cpp`, `main/time_page_coordinator.cpp`,
+`gemini_service/organized_transcript.cpp`) with the host compiler against small ESP-IDF header
+stand-ins in `tests/host/stubs/`. They are outside `main/` and `components/`, so ESP-IDF never
+builds them into the firmware. `tools/preview/render.sh` renders screens to PNG the same way.
+CI (`.github/workflows/build.yml`) runs both plus the firmware build on every push. Add a
+host test with any change to logic that can be compiled off-device. **Do not automatically
 run builds** — only build when the user explicitly asks, and reuse the
 existing `build/` directory rather than creating a new one (see `AGENTS.md`).
 
@@ -67,7 +84,7 @@ Equivalent raw commands (target is `esp32s3`):
 idf.py build
 idf.py -p <PORT> -b 460800 flash
 idf.py monitor
-idf.py menuconfig   # project options live under "Chroninkle Settings"
+idf.py menuconfig   # project options live under "Brain Dump Settings"
 ```
 
 Asset regeneration (icons/logos/fonts are generated C++ compiled into
@@ -96,6 +113,10 @@ npm run build         # tsc -b && vite build -> dist/
 npm run lint
 cp dist/index.html dist/index.js dist/index.css ../components/wifi_service/portal/
 ```
+
+Web tests: `npm test` (Node's built-in runner over `webserver/tests/*.test.ts`) and
+`npm run test:e2e` (Chromium via Playwright against a fake device; run `npm run build` first).
+CI runs both and fails if `components/wifi_service/portal/` does not match a fresh build.
 
 `webserver/` is the source of truth; `components/wifi_service/portal/` is
 tracked, generated build output — don't hand-edit it. See `webserver/README.md`
@@ -266,8 +287,9 @@ and `summary_service` are separate components (not nested inside
 ### NVS namespaces / build-time Kconfig
 
 Runtime settings persist under service-owned NVS namespaces: `wifi`
-(`ssid`, `password`), `timezone` (`enabled`, `tz_name`, `location`, `time_src`,
-`ntp_sync`, `ntp_epoch`). Build-time defaults live under `Chroninkle Settings`
+(`ssid`, `password`), `timezone` (`enabled`, `tz_name`, `location`, `hour24`, `time_src`,
+`ntp_sync`, `ntp_epoch`), `wifi_saver` (`enabled`), `feedback` (`silent`),
+`gemini` (`api_key`, `lang`). Build-time defaults live under `Brain Dump Settings`
 (`idf.py menuconfig`): `CONFIG_CHRONINKLE_WIFI_*`, `CONFIG_CHRONINKLE_TIME_SYNC_DEFAULT_ENABLED`,
 `CONFIG_CHRONINKLE_DEFAULT_TIMEZONE_NAME`, `CONFIG_CHRONINKLE_GEMINI_API_KEY`,
 `CONFIG_CHRONINKLE_AUTO_SLEEP_*_TIMEOUT_SECONDS`. Saved NVS Wi-Fi credentials
@@ -302,7 +324,9 @@ personal credentials afterward, and no risk of a release accidentally shipping t
   what a power-key press or a sound cue *means* belongs in `main/` or
   `feedback_service`, not the driver.
 - Don't hand-edit generated files: `components/project_assets/generated_*`,
-  `components/epaper_ui/generated_epaper_fonts.*`, and
+  `components/epaper_ui/generated_epaper_fonts.*`,
+  `components/epaper_ui/generated_epaper_hebrew_fonts.*`
+  (`scripts/generate_epaper_hebrew_fonts.py`), and
   `components/wifi_service/portal/*` (regenerate via the scripts/build steps
   above instead).
 - `GPIO0` (`ACTION`/BOOT button) is the boot/download strap pin and must read

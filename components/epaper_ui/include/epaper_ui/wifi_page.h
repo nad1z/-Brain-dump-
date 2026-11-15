@@ -17,6 +17,7 @@ enum class WifiPageItemId : uint8_t {
     kNone = 0,
     kWifiToggle,
     kEnableApToggle,
+    kBatterySaverToggle,
     kNetworkList,
     kPasswordInput,
     kPasswordVisibilityButton,
@@ -32,6 +33,11 @@ struct WifiPageState {
     // Settings hub.
     MenuToggleState wifi_toggle = {};
     MenuToggleState access_point_toggle = {};
+    // Keeps the radio off between syncs (main/wifi_saver_runtime).
+    MenuToggleState battery_saver_toggle = {};
+    // False while Wi-Fi is switched off: the network list, password, Scan and Connect are hidden
+    // (there is nothing to scan or join), and Back moves up under the switches.
+    bool show_network_controls = true;
     NetworkListState network_list = {};
     PasswordInputState password_input = {};
     ButtonState scan_button = {};

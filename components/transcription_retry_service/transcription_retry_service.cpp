@@ -107,6 +107,11 @@ bool RetryOne(const std::string& recording_id)
 
     const recording_archive_service::SaveResult save_result =
         recording_archive_service::SaveTranscript(recording_id, result.last_transcript);
+    if (save_result.transcript_saved) {
+        (void)recording_archive_service::ApplyOrganization(
+            recording_id, recording_archive_service::OrganizationFromSuggestion(
+                              result.last_suggested_tag, result.last_title, result.last_due_local));
+    }
     if (!save_result.transcript_saved) {
         ESP_LOGW(kTag, "Retry for %s: transcript save failed", recording_id.c_str());
         recording_archive_service::ClearPendingTranscription(recording_id);

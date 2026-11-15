@@ -339,7 +339,8 @@ int DrawTodoRow(uint8_t* framebuffer,
     int line_y = y;
     for (const std::string& line : lines) {
         DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
-                           text_x, line_y, line, role, design::color::kBlack);
+                           TextStartX(role, line, text_x, text_max_width), line_y, line, role,
+                           design::color::kBlack);
         line_y += line_height + design::lock_screen::kWrapLineGap;
     }
 

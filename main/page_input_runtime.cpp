@@ -15,6 +15,7 @@
 #include "notes_page_runtime.h"
 #include "onboarding_page_interactions.h"
 #include "onboarding_page_runtime.h"
+#include "feedback_service.h"
 #include "overlay_runtime.h"
 #include "todos_page_interactions.h"
 #include "todos_page_runtime.h"
@@ -41,6 +42,8 @@
 #include "ui_refresh_runtime.h"
 #include "wifi_page_interactions.h"
 #include "wifi_page_runtime.h"
+#include "wifi_saver_runtime.h"
+#include "share_service.h"
 #include "wifi_service.h"
 
 namespace page_input_runtime {
@@ -314,6 +317,39 @@ ButtonResult ApplySettingsStorageActivateResult(
             return;
         }
         (void)overlay_runtime::ShowStorageModalConfirmFormat();
+    };
+    callbacks.toggle_sharing = []() {
+        if (share_service::IsActive()) {
+            share_service::Stop();
+            return;
+        }
+        const char* problem = nullptr;
+        switch (share_service::Start()) {
+            case share_service::StartResult::kStarted:
+            case share_service::StartResult::kAlreadyActive: {
+                const share_service::State state = share_service::GetState();
+                (void)overlay_runtime::ShowShareModal(state.url, state.pin);
+                return;
+            }
+            case share_service::StartResult::kNotConnected:
+                problem = "Connect to WiFi first";
+                break;
+            case share_service::StartResult::kNoSdCard:
+                problem = "Insert an SD card first";
+                break;
+            case share_service::StartResult::kFailed:
+            default:
+                problem = "Sharing could not start";
+                break;
+        }
+        (void)overlay_runtime::ShowToastForDuration(
+            [problem]() {
+                epaper_ui::ToastState toast = {};
+                toast.visible = true;
+                toast.body_text = problem;
+                return toast;
+            }(),
+            2500);
     };
     callbacks.enable_otg = []() {
         // The button is a toggle: while OTG is up it exits, otherwise it enters. Entering
@@ -764,6 +800,11 @@ ButtonResult ApplySettingsActivateResult(const settings_page_interactions::Activ
         // Deferred so the screen change happens after input dispatch; app_shell polls for it.
         onboarding_page_runtime::RequestManualLaunch();
     };
+    callbacks.toggle_silent = []() {
+        feedback_service::SetSilent(!feedback_service::IsSilent());
+        (void)settings_page_runtime::UpdateDisplayStateAndRequestRefresh(
+            display_service::RefreshMode::kPartial);
+    };
     settings_page_interactions::ApplyPrimaryActivateResult(activation, callbacks);
     if (result.footer_item != footer_runtime::FooterFocusItem::kNone) {
         result.interaction_result.play_feedback = false;
@@ -797,7 +838,11 @@ ButtonResult ApplyWifiActivateResult(const wifi_page_interactions::ActivateResul
     };
     callbacks.toggle_wifi = []() {
         const wifi_service::UiState state = wifi_service::GetUiState();
-        wifi_service::SetWifiEnabled(!state.wifi_enabled);
+        wifi_saver_runtime::HandleWifiToggle(state.wifi_enabled);
+    };
+    callbacks.toggle_battery_saver = []() {
+        wifi_saver_runtime::SetEnabled(!wifi_saver_runtime::IsEnabled());
+        (void)wifi_page_runtime::SyncFromService(true);
     };
     callbacks.toggle_access_point = []() {
         const wifi_service::UiState state = wifi_service::GetUiState();

@@ -14,6 +14,7 @@ class WifiPageCoordinator {
 public:
     WifiPageCoordinator();
 
+    void SetBatterySaver(bool enabled) { battery_saver_ = enabled; }
     void RefreshFromService(const wifi_service::UiState& ui_state,
                             const wifi_service::ScanSnapshot& scan_snapshot);
     void Show();
@@ -54,6 +55,9 @@ private:
 
     static epaper_ui::ToggleVisualState BuildToggleState(bool enabled, bool focused);
     void InitializePasswordInput();
+    // Rebuilds the focus model when Wi-Fi is switched on/off (network controls come and go),
+    // keeping focus on the same control when it still exists.
+    void SyncNavigationModel();
     int NetworkCount() const;
 
     page_navigation::NavigationModel navigation_model_ =
@@ -71,6 +75,7 @@ private:
     // interactions/runtime layer, not the coordinator (same split Settings used).
     bool wifi_enabled_ = true;
     bool access_point_mode_ = false;
+    bool battery_saver_ = false;
 };
 
 #endif  // WIFI_PAGE_COORDINATOR_H_

@@ -51,6 +51,23 @@ struct RecordingMetadata {
     // matching entry in the current registry (the topic was since deleted) is simply skipped by
     // readers, so no rewrite is needed here when a topic is deleted.
     std::vector<std::string> topic_ids = {};
+    // True while the recording's type is still to be decided by the model: it was saved with the
+    // "Auto" choice and no transcript has come back yet. `tag` holds a placeholder (Note) until
+    // ApplyOrganization fills in the real one and clears this.
+    bool auto_tag = false;
+    // Short English title suggested by the model alongside the transcript (empty when none).
+    std::string title = {};
+    // Local date/time a reminder is due, "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM", as worked out by the
+    // model from what was said ("tomorrow at nine"). Empty when the recording names no time.
+    std::string due_local = {};
+};
+
+// What the model worked out about a recording in the same request that transcribed it.
+struct Organization {
+    bool has_tag = false;
+    RecordingTag tag = RecordingTag::kNote;
+    std::string title = {};
+    std::string due_local = {};
 };
 
 // A single archived recording, resolved from its sidecar files on the SD card.
@@ -76,6 +93,8 @@ struct SaveOptions {
     // Caller-computed: true when Gemini wasn't ready at save time, so the saved recording should
     // be flagged for one automatic retry attempt later.
     bool pending_transcription = false;
+    // Let the model pick the type once the transcript arrives (see RecordingMetadata::auto_tag).
+    bool auto_tag = false;
 };
 
 struct SaveResult {
@@ -148,6 +167,15 @@ bool MarkRecordingFollowUp(const std::string& recording_id, bool follow_up,
                            bool follow_up_completed);
 // Change a recording's tag (e.g. turn a Note into a Task) and re-aggregate the archive counts.
 bool UpdateRecordingTag(const std::string& recording_id, RecordingTag tag);
+// Builds an Organization from the model's raw reply fields ("note" | "task" | "idea", title,
+// due); an unrecognised or empty type leaves has_tag false.
+Organization OrganizationFromSuggestion(const std::string& suggested_tag,
+                                        const std::string& title,
+                                        const std::string& due_local);
+// Stores the model's title/due time, and -- only when the recording is still waiting for an
+// automatic type (auto_tag) -- its suggested type. A type the user chose by hand is never
+// overridden.
+bool ApplyOrganization(const std::string& recording_id, const Organization& organization);
 // Replaces a recording's set of topic ids wholesale (e.g. from the Details page's "Edit topics"
 // multi-select). Does not validate the ids against topic_service's current registry -- readers
 // already treat an id with no matching registry entry as simply absent (see topic_service.h), so

@@ -53,6 +53,7 @@ void WifiPageCoordinator::RefreshFromService(const wifi_service::UiState& ui_sta
 {
     wifi_enabled_ = ui_state.wifi_enabled;
     access_point_mode_ = ui_state.access_point_mode;
+    SyncNavigationModel();
 
     if (scan_snapshot.state == wifi_service::ScanState::kRunning) {
         network_status_ = epaper_ui::NetworkListStatus::kIdle;
@@ -133,6 +134,29 @@ void WifiPageCoordinator::RefreshFromService(const wifi_service::UiState& ui_sta
                      std::clamp(focus_.index() >= 0 ? focus_.index() : default_focus,
                                 0,
                                 navigation_model_.item_count - 1));
+}
+
+void WifiPageCoordinator::SyncNavigationModel()
+{
+    // The setup hotspot also lists networks, so the controls stay while it is on.
+    const bool show_network_controls = wifi_enabled_ || access_point_mode_;
+    const bool has_network_controls =
+        navigation_model_.IndexOfRole(page_navigation::NavigationItemRole::kWifiPageNetworkList) >= 0;
+    if (show_network_controls == has_network_controls) {
+        return;
+    }
+    const page_navigation::NavigationItemDescriptor* focused =
+        navigation_model_.ItemAt(focus_.index());
+    const page_navigation::NavigationItemRole focused_role =
+        focused != nullptr ? focused->role : page_navigation::NavigationItemRole::kWifiPageWifiToggle;
+    navigation_model_ = page_navigation::BuildWifiPageNavigationModel(show_network_controls);
+    int index = navigation_model_.IndexOfRole(focused_role);
+    if (index < 0) {
+        index = navigation_model_.IndexOfRole(page_navigation::NavigationItemRole::kWifiPageWifiToggle);
+        network_list_active_ = false;
+        password_input_state_.active = false;
+    }
+    focus_.Configure(navigation_model_.item_count, std::max(0, index));
 }
 
 void WifiPageCoordinator::Show()
@@ -264,6 +288,13 @@ epaper_ui::WifiPageState WifiPageCoordinator::BuildState() const
         .toggle_state = BuildToggleState(
             access_point_mode_,
             IsRoleFocused(page_navigation::NavigationItemRole::kWifiPageEnableApToggle)),
+    };
+    state.show_network_controls = wifi_enabled_ || access_point_mode_;
+    state.battery_saver_toggle = {
+        .label_text = "Battery saver",
+        .toggle_state = BuildToggleState(
+            battery_saver_,
+            IsRoleFocused(page_navigation::NavigationItemRole::kWifiPageBatterySaverToggle)),
     };
     state.network_list = {
         .status = network_status_,

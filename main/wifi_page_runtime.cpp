@@ -1,5 +1,7 @@
 #include "wifi_page_runtime.h"
 
+#include "wifi_saver_runtime.h"
+
 #include <climits>
 #include <mutex>
 
@@ -339,6 +341,7 @@ esp_err_t SyncFromService(bool request_refresh_if_active)
     {
         std::lock_guard<std::mutex> lock(s_mutex);
         s_coordinator.RefreshFromService(wifi_service::GetUiState(), wifi_service::GetScanSnapshot());
+        s_coordinator.SetBatterySaver(wifi_saver_runtime::IsEnabled());
         next = BuildStateLocked();
     }
 

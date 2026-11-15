@@ -4,10 +4,12 @@
 #include <algorithm>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 #include "design_tokens.h"
 #include "epaper_ui/bitmap_font.h"
 #include "epaper_ui/generated_epaper_fonts.h"
+#include "epaper_ui/text_shaping.h"
 
 namespace epaper_ui {
 
@@ -113,13 +115,9 @@ void DrawText(const DrawPixelFn& draw_pixel,
 
     const font_renderer_detail::FontSelection selection = FontForRole(role);
     int cursor_x = x;
-    for (size_t index = 0; index < text.size(); ++index) {
-        const epaper_font::GlyphBitmap* glyph =
-            epaper_font::FindGlyph(*selection.font, text[index]);
-        if (glyph == nullptr) {
-            continue;
-        }
 
+    const auto draw_glyph = [&](const epaper_font::GlyphBitmap* glyph, const uint8_t* bitmaps,
+                                bool is_last) {
         const int glyph_x = cursor_x + ScaleMetric(glyph->bearing_x, selection);
         const int glyph_y = y + ScaleMetric(selection.font->ascent, selection) -
                             ScaleMetric(glyph->bearing_y, selection);
@@ -139,7 +137,7 @@ void DrawText(const DrawPixelFn& draw_pixel,
                 }
 
                 const uint8_t bit_mask = static_cast<uint8_t>(0x80U >> (bit_index % 8U));
-                if ((selection.font->bitmaps[byte_index] & bit_mask) == 0) {
+                if ((bitmaps[byte_index] & bit_mask) == 0) {
                     continue;
                 }
 
@@ -158,9 +156,35 @@ void DrawText(const DrawPixelFn& draw_pixel,
         }
 
         cursor_x += ScaleMetric(glyph->advance, selection);
-        if (index + 1 < text.size()) {
+        if (!is_last) {
             cursor_x += ScaleMetric(selection.tracking, selection);
         }
+    };
+
+    if (epaper_font::IsPlainAscii(text)) {
+        // Fast path, unchanged from the ASCII-only renderer: one byte, one glyph.
+        for (size_t index = 0; index < text.size(); ++index) {
+            const epaper_font::GlyphBitmap* glyph =
+                epaper_font::FindGlyph(*selection.font, text[index]);
+            if (glyph == nullptr) {
+                continue;
+            }
+            draw_glyph(glyph, selection.font->bitmaps, index + 1 >= text.size());
+        }
+        return;
+    }
+
+    // Text with non-ASCII characters (Hebrew): decode, put into drawing order, then draw.
+    std::vector<uint32_t> codepoints;
+    epaper_font::DecodeForDisplay(text, &codepoints);
+    epaper_font::ReorderForDisplay(&codepoints);
+    for (size_t index = 0; index < codepoints.size(); ++index) {
+        const epaper_font::GlyphRef ref =
+            epaper_font::FindGlyphForCodepoint(*selection.font, codepoints[index]);
+        if (ref.glyph == nullptr) {
+            continue;
+        }
+        draw_glyph(ref.glyph, ref.bitmaps, index + 1 >= codepoints.size());
     }
 }
 

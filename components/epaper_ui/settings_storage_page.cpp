@@ -17,6 +17,7 @@ constexpr int kBackButtonGap = design::spacing::k24;
 struct Layout {
     UiRect storage_status = {};
     UiRect enable_otg_button = {};
+    UiRect share_button = {};
     UiRect format_sd_button = {};
     UiRect back = {};
 };
@@ -40,10 +41,13 @@ Layout BuildLayout(int portrait_width, int portrait_height, const SettingsStorag
     const UiRect enable_otg_button =
         ButtonBounds(page_x, button_y, state.enable_otg_button, otg_button_style);
 
+    const UiRect share_button = ButtonBounds(page_x, enable_otg_button.bottom() + kButtonStackGap,
+                                             state.share_button, otg_button_style);
+
     ButtonStyle format_button_style = {};
     format_button_style.width = page_width;
     const UiRect format_sd_button =
-        ButtonBounds(page_x, enable_otg_button.bottom() + kButtonStackGap, state.format_sd_button,
+        ButtonBounds(page_x, share_button.bottom() + kButtonStackGap, state.format_sd_button,
                      format_button_style);
 
     ButtonStyle back_style = {};
@@ -55,6 +59,7 @@ Layout BuildLayout(int portrait_width, int portrait_height, const SettingsStorag
     return {
         .storage_status = storage_status,
         .enable_otg_button = enable_otg_button,
+        .share_button = share_button,
         .format_sd_button = format_sd_button,
         .back = back,
     };
@@ -71,6 +76,8 @@ UiRect SettingsStoragePageItemBounds(int portrait_width,
     switch (item) {
         case SettingsStoragePageItemId::kEnableOtgButton:
             return layout.enable_otg_button;
+        case SettingsStoragePageItemId::kShareButton:
+            return layout.share_button;
         case SettingsStoragePageItemId::kFormatSdButton:
             return layout.format_sd_button;
         case SettingsStoragePageItemId::kBack:
@@ -94,6 +101,7 @@ bool HitTestSettingsStoragePageItem(int portrait_width,
 
     constexpr SettingsStoragePageItemId kItems[] = {
         SettingsStoragePageItemId::kEnableOtgButton,
+        SettingsStoragePageItemId::kShareButton,
         SettingsStoragePageItemId::kFormatSdButton,
         SettingsStoragePageItemId::kBack,
     };
@@ -147,6 +155,8 @@ void DrawSettingsStoragePage(uint8_t* framebuffer,
     DrawButton(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
               layout.enable_otg_button.x, layout.enable_otg_button.y, state.enable_otg_button,
               otg_button_style);
+    DrawButton(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+              layout.share_button.x, layout.share_button.y, state.share_button, otg_button_style);
 
     // Primary (darker) variant: the primary action on this page.
     DrawButton(framebuffer, raw_width, raw_height, portrait_width, portrait_height,

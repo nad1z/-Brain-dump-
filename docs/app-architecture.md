@@ -833,13 +833,17 @@ Wi-Fi and time services follow the same boundary:
 Runtime-persisted settings live in service-owned NVS namespaces:
 
 - `wifi`: `ssid`, `password`
-- `timezone`: `enabled`, `tz_name`, `location`, `time_src`, `ntp_sync`,
-  `ntp_epoch`
+- `timezone`: `enabled`, `tz_name`, `location`, `hour24` (12/24-hour display
+  preference), `time_src`, `ntp_sync`, `ntp_epoch`
+- `feedback`: `silent` (Silent mode, `feedback_service`)
+- `gemini`: `api_key`, `lang` (transcription language)
+- `wifi_saver`: `enabled` (Battery saver, `main/wifi_saver_runtime.cpp`; policy in the
+  pure, host-tested `main/wifi_saver_policy.cpp`)
 - `rec_archive_cfg`: `days` (todo archive-after-days setting, `recording_archive_service`;
   deliberately a separate namespace from `recording_archive_service`'s own internal
   `rec_archive`/`counts` cached-counts blob, which isn't a user setting)
 
-The build-time Wi-Fi/time defaults live under `Chroninkle Settings`:
+The build-time Wi-Fi/time defaults live under `Brain Dump Settings`:
 
 - `CONFIG_CHRONINKLE_WIFI_AP_PREFIX`
 - `CONFIG_CHRONINKLE_WIFI_STA_SSID`
@@ -1162,6 +1166,20 @@ Do not make this component depend on `board`; pass pins in from the service or
 board layer. On Sticky, `storage_service` asks the board layer to initialize the
 shared SPI bus first and passes `external_spi_bus=true`, so the SD wrapper only
 adds its SDSPI device to the existing bus.
+
+### `components/share_service`
+
+"Share over WiFi". Owns a second, on-demand HTTP server (port 80, own ctrl port) that runs only
+while the device is a Wi-Fi station and the user started sharing from Settings > Storage. It
+serves the same embedded web page (`wifi_service::RegisterPortalPageRoutes`) plus
+`/api/share/status`, `/api/recordings`, `/api/recordings/audio`, and `/api/books`
+(GET/POST/DELETE). Every request on this server needs the `X-Share-Pin` header (four digits,
+regenerated per session, five failures lock it for 60 s). It stops after 10 idle minutes (its
+timer calls a stopped handler so `app_shell` can take the card down), on a Wi-Fi disconnect,
+or from the card's "Stop sharing" action. The same routes, without the PIN, are registered on
+the setup hotspot's server through `app_shell`'s portal route registrar. Name/URL/PIN helpers
+are in the pure, host-tested `share_names.cpp`. EPUB conversion is deliberately not here: the
+web page converts EPUB to text in the browser before uploading.
 
 ### `components/storage_service`
 
@@ -1532,7 +1550,7 @@ Configuration is file-based and should stay reproducible:
 - `sdkconfig` captures the resolved ESP-IDF configuration.
 - `partitions.csv` defines the OTA partition table.
 
-Project-specific Kconfig options live under `Chroninkle Settings`. Auto-sleep
+Project-specific Kconfig options live under `Brain Dump Settings`. Auto-sleep
 currently exposes reproducible build-time defaults for display sleep and light
 sleep timeout seconds; `0` disables the corresponding stage, and a nonzero light
 sleep timeout must be greater than or equal to the display sleep timeout.

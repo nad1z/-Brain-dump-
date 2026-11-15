@@ -49,6 +49,9 @@ esp_err_t ShowStorageModalUsbEntering();
 esp_err_t ShowStorageModalUsbActive();
 esp_err_t ShowStorageModalUsbNoCable();
 esp_err_t ShowStorageModalUsbError();
+// "Sharing over WiFi" card showing where to connect; its only action stops sharing.
+esp_err_t ShowShareModal(const std::string& url, const std::string& pin);
+bool IsShareModalVisible();
 esp_err_t DismissStorageModal();
 esp_err_t ShowTopicsModalConfirmDelete();
 esp_err_t ShowBookListModalConfirmDelete();

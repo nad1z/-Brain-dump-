@@ -33,6 +33,7 @@ constexpr const char* kNvsNamespace = "timezone";
 constexpr const char* kEnabledKey = "enabled";
 constexpr const char* kTimezoneNameKey = "tz_name";
 constexpr const char* kLocationKey = "location";
+constexpr const char* kHour24Key = "hour24";
 constexpr const char* kTimeSourceKey = "time_src";
 constexpr const char* kNtpSyncedKey = "ntp_sync";
 constexpr const char* kNtpEpochKey = "ntp_epoch";
@@ -135,6 +136,7 @@ std::atomic<bool> s_sntp_sync_seen{false};
 bool s_initialized = false;
 bool s_network_connected = false;
 bool s_enabled = false;
+std::atomic<bool> s_use_24_hour{false};
 bool s_has_network_sync = false;
 uint32_t s_last_network_sync_epoch = 0;
 TimeSource s_time_source = TimeSource::kUnknown;
@@ -229,6 +231,7 @@ Snapshot BuildSnapshotLocked()
     snapshot.settings.enabled = s_enabled;
     snapshot.settings.timezone_name = s_timezone_name;
     snapshot.settings.location = s_location;
+    snapshot.settings.use_24_hour = s_use_24_hour.load(std::memory_order_relaxed);
 
     const time_t now = time(nullptr);
     snapshot.runtime.clock_enabled = s_enabled;
@@ -308,6 +311,10 @@ void LoadSettingsFromStorage()
         s_timezone_name = CONFIG_CHRONINKLE_DEFAULT_TIMEZONE_NAME;
     }
     LoadString(handle, kLocationKey, &s_location);
+    uint8_t hour24 = 0;
+    if (nvs_get_u8(handle, kHour24Key, &hour24) == ESP_OK) {
+        s_use_24_hour.store(hour24 != 0, std::memory_order_relaxed);
+    }
     nvs_close(handle);
 }
 
@@ -326,6 +333,10 @@ bool SaveSettingsToStorageLocked()
     }
     if (err == ESP_OK) {
         err = nvs_set_str(handle, kLocationKey, s_location.c_str());
+    }
+    if (err == ESP_OK) {
+        err = nvs_set_u8(handle, kHour24Key,
+                         s_use_24_hour.load(std::memory_order_relaxed) ? 1 : 0);
     }
     if (err == ESP_OK) {
         err = nvs_commit(handle);
@@ -653,6 +664,7 @@ void AppendSnapshot(cJSON* root, const Snapshot& snapshot, const char* message)
     cJSON_AddBoolToObject(settings, "enabled", snapshot.settings.enabled);
     cJSON_AddStringToObject(settings, "timezone_name", snapshot.settings.timezone_name.c_str());
     cJSON_AddStringToObject(settings, "location", snapshot.settings.location.c_str());
+    cJSON_AddBoolToObject(settings, "use_24_hour", snapshot.settings.use_24_hour);
 
     cJSON* runtime = cJSON_AddObjectToObject(root, "runtime");
     AppendRuntime(runtime, snapshot.runtime);
@@ -703,6 +715,18 @@ bool ParsePatchBody(const std::string& body, SettingsPatch* patch, std::string* 
     } else if (location != nullptr && !cJSON_IsNull(location)) {
         if (error != nullptr) {
             *error = "Invalid location";
+        }
+        cJSON_Delete(root);
+        return false;
+    }
+
+    cJSON* use_24_hour = cJSON_GetObjectItemCaseSensitive(root, "use_24_hour");
+    if (cJSON_IsBool(use_24_hour)) {
+        patch->has_use_24_hour = true;
+        patch->use_24_hour = cJSON_IsTrue(use_24_hour);
+    } else if (use_24_hour != nullptr && !cJSON_IsNull(use_24_hour)) {
+        if (error != nullptr) {
+            *error = "Invalid use_24_hour";
         }
         cJSON_Delete(root);
         return false;
@@ -878,6 +902,11 @@ void SetEventHandler(EventHandler handler, void* context)
     s_event_context = context;
 }
 
+bool Use24HourClock()
+{
+    return s_use_24_hour.load(std::memory_order_relaxed);
+}
+
 Snapshot GetSnapshot()
 {
     std::lock_guard<std::mutex> lock(s_mutex);
@@ -985,6 +1014,9 @@ Result ApplySettingsPatch(const SettingsPatch& patch)
         s_enabled = enable_clock;
         s_timezone_name = staged_timezone_name;
         s_location = staged_location;
+        if (patch.has_use_24_hour) {
+            s_use_24_hour.store(patch.use_24_hour, std::memory_order_relaxed);
+        }
         if (!SaveSettingsToStorageLocked()) {
             return MakeError(500, "Failed to save time settings");
         }

@@ -11,6 +11,7 @@
 #include "epaper_ui/font_renderer.h"
 #include "epaper_ui/keyboard.h"
 #include "epaper_ui/lock_screen.h"
+#include "epaper_ui/splash_screen.h"
 #include "epaper_ui/settings_page.h"
 #include "epaper_ui/card_modal.h"
 #include "epaper_ui/sticky_note.h"
@@ -42,9 +43,6 @@ namespace {
 constexpr const char* kTag = "DisplayService";
 constexpr int kPortraitWidth = WAVESHARE_EPD_HEIGHT;
 constexpr int kPortraitHeight = WAVESHARE_EPD_WIDTH;
-constexpr int kSplashLogoGap = design::spacing::k16;
-constexpr int kSplashAttributionGap = design::spacing::k8;
-constexpr int kSplashBottomMargin = design::spacing::k48;
 constexpr uint32_t kDisplayTaskStackWords = 4096;
 // How long DisplayTask waits for a new command, once EpaperPanel::NeedsGhostingFlush()
 // is true, before treating the gap as "input paused" and running the deferred full
@@ -224,109 +222,6 @@ const RenderSnapshot& CaptureRenderSnapshot()
     snapshot.toast = s_toast_state;
     snapshot.sticky_note = s_sticky_note_state;
     return snapshot;
-}
-
-bool AssetPixelSet(const EmbeddedImageAsset& asset, int x, int y)
-{
-    if (asset.data == nullptr || x < 0 || y < 0 || x >= asset.width || y >= asset.height) {
-        return false;
-    }
-
-    const size_t byte_index =
-        static_cast<size_t>(y) * asset.stride_bytes + static_cast<size_t>(x / 8);
-    const uint8_t bit_mask = static_cast<uint8_t>(0x80U >> (x & 0x07));
-    return (asset.data[byte_index] & bit_mask) != 0;
-}
-
-void DrawRawPixel(uint8_t* framebuffer, int x, int y, bool black)
-{
-    if (framebuffer == nullptr || x < 0 || y < 0 || x >= WAVESHARE_EPD_WIDTH ||
-        y >= WAVESHARE_EPD_HEIGHT) {
-        return;
-    }
-
-    const size_t index = static_cast<size_t>(y) * (WAVESHARE_EPD_WIDTH / 8) +
-                         static_cast<size_t>(x / 8);
-    const uint8_t mask = static_cast<uint8_t>(0x80U >> (x & 0x07));
-    if (black) {
-        framebuffer[index] &= static_cast<uint8_t>(~mask);
-    } else {
-        framebuffer[index] |= mask;
-    }
-}
-
-void DrawPortraitPixel(uint8_t* framebuffer, int x, int y, bool black)
-{
-    if (x < 0 || y < 0 || x >= kPortraitWidth || y >= kPortraitHeight) {
-        return;
-    }
-
-    const int raw_x = y;
-    const int raw_y = WAVESHARE_EPD_HEIGHT - 1 - x;
-    DrawRawPixel(framebuffer, raw_x, raw_y, black);
-}
-
-void DrawPortraitMonoAsset(uint8_t* framebuffer, int x, int y, const EmbeddedImageAsset* asset)
-{
-    if (framebuffer == nullptr || asset == nullptr || asset->format != ImageFormat::kMono1) {
-        return;
-    }
-
-    for (int row = 0; row < asset->height; ++row) {
-        for (int col = 0; col < asset->width; ++col) {
-            if (AssetPixelSet(*asset, col, row)) {
-                DrawPortraitPixel(framebuffer, x + col, y + row, true);
-            }
-        }
-    }
-}
-
-void DrawSplashText(uint8_t* framebuffer, int x, int y, std::string_view text, design::TypographyRole role)
-{
-    epaper_ui::DrawText(
-        [&](int px, int py, uint8_t /*color*/) { DrawPortraitPixel(framebuffer, px, py, true); },
-        x,
-        y,
-        text,
-        design::color::kTextPrimary,
-        role);
-}
-
-void DrawSplashScreen(uint8_t* framebuffer)
-{
-    const EmbeddedImageAsset* chroninkle_logo =
-        project_assets::GetLogo(EmbeddedLogoId::kChroninkleLogoStacked);
-    const EmbeddedImageAsset* followup_logo =
-        project_assets::GetLogo(EmbeddedLogoId::kFollowupLogo);
-    const EmbeddedImageAsset* alxv_logo =
-        project_assets::GetLogo(EmbeddedLogoId::kAlxvLabsLogo);
-    if (framebuffer == nullptr || chroninkle_logo == nullptr || followup_logo == nullptr ||
-        alxv_logo == nullptr) {
-        return;
-    }
-
-    constexpr std::string_view kAttributionLabel = "Based on";
-    const int label_width =
-        epaper_ui::MeasureText(design::TypographyRole::kLabelSmall, kAttributionLabel);
-    const int label_height = epaper_ui::LineHeight(design::TypographyRole::kLabelSmall);
-
-    // Attribution block anchored to the bottom margin: the label, then Followup's own splash
-    // logo and the ALXV logo it was shown with, kept in their original stacked layout.
-    const int alxv_y = kPortraitHeight - kSplashBottomMargin - static_cast<int>(alxv_logo->height);
-    const int alxv_x = (kPortraitWidth - static_cast<int>(alxv_logo->width)) / 2;
-    const int followup_y = alxv_y - kSplashLogoGap - static_cast<int>(followup_logo->height);
-    const int followup_x = (kPortraitWidth - static_cast<int>(followup_logo->width)) / 2;
-    const int label_y = followup_y - kSplashAttributionGap - label_height;
-    const int label_x = (kPortraitWidth - label_width) / 2;
-
-    // The Chroninkle mark gets the rest of the screen, centered above the attribution block.
-    const int hero_y = (label_y - static_cast<int>(chroninkle_logo->height)) / 2;
-    const int hero_x = (kPortraitWidth - static_cast<int>(chroninkle_logo->width)) / 2;
-    DrawPortraitMonoAsset(framebuffer, hero_x, hero_y, chroninkle_logo);
-
-    DrawSplashText(framebuffer, label_x, label_y, kAttributionLabel, design::TypographyRole::kLabelSmall);
-    DrawPortraitMonoAsset(framebuffer, followup_x, followup_y, followup_logo);
-    DrawPortraitMonoAsset(framebuffer, alxv_x, alxv_y, alxv_logo);
 }
 
 void DrawCurrentOverlays(uint8_t* framebuffer, const RenderSnapshot& snapshot)
@@ -1312,7 +1207,8 @@ esp_err_t ApplyStartupSplash()
 {
     EpaperPanel& panel = Panel();
     panel.Clear(true);
-    DrawSplashScreen(panel.framebuffer());
+    epaper_ui::DrawSplashScreen(panel.framebuffer(), WAVESHARE_EPD_WIDTH, WAVESHARE_EPD_HEIGHT,
+                                kPortraitWidth, kPortraitHeight);
 
     RefreshBusyGuard refresh_busy;
     const esp_err_t err = panel.RefreshFullBase();

@@ -21,9 +21,15 @@ std::string DateKey(const std::string& created_local_date);
 // once midnight passes. Empty / unparseable dates fall back to "Today".
 std::string FormatDateLabel(const std::string& created_local_date);
 
-// Clock time for a recording's header: "%I:%M %p" (leading zero stripped) when the timestamp is
-// valid, otherwise "--:--".
+// Clock time for a recording's header, following the user's 12/24-hour preference: "%H:%M"
+// in 24-hour mode, else "%I:%M %p" (leading zero stripped). "--:--" when the timestamp is
+// invalid.
 std::string FormatTimeLabel(bool time_valid, int64_t created_unix_seconds);
+
+// Short label for a reminder's due date/time ("YYYY-MM-DD" or "YYYY-MM-DDTHH:MM", local time):
+// "Today 09:30", "Tomorrow", "Overdue", or "Mon Nov 16 14:00" -- the time follows the user's
+// 12/24-hour preference. Empty for an empty or malformed value.
+std::string FormatDueLabel(const std::string& due_local);
 
 // Compact duration: "<Ns>" under a minute, otherwise "<Nm>".
 std::string FormatDurationLabel(uint32_t duration_ms);

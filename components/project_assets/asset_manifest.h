@@ -5,10 +5,13 @@
 
 enum class EmbeddedLogoId : uint8_t {
     kAlxvLabsLogo,
+    kBrainDumpLogoStacked,
     kChroninkleIcon,
     kChroninkleLogo,
     kChroninkleLogoStacked,
+    kChroninkleLogoSmall,
     kFollowupLogo,
+    kFollowupLogoSmall,
 };
 
 enum class EmbeddedIconId : uint8_t {

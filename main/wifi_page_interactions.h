@@ -19,6 +19,7 @@ enum class ActivateIntent : uint8_t {
     kForceRefresh,
     kToggleWifi,
     kToggleAccessPoint,
+    kToggleBatterySaver,
     kOpenPasswordKeyboard,
     kStartNetworkScan,
     kToggleSelectedNetworkConnection,
@@ -55,6 +56,7 @@ struct ActivateCallbacks {
     std::function<void()> force_refresh;
     std::function<void()> toggle_wifi;
     std::function<void()> toggle_access_point;
+    std::function<void()> toggle_battery_saver;
     std::function<void()> open_password_keyboard;
     std::function<void()> start_network_scan;
     std::function<void(bool disconnect_current_network,
