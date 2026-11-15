@@ -10,17 +10,21 @@ namespace {
 constexpr auto kTitleRole = design::TypographyRole::kHeadingH1;
 constexpr int kSideInset = design::spacing::k16;
 constexpr int kTopGap = design::spacing::k24;
-constexpr int kHeadingBottomPadding = design::spacing::k24;
+constexpr int kHeadingBottomPadding = design::spacing::k12;
 constexpr int kSectionGap = design::spacing::k16;
-constexpr int kToggleNetworkGap = design::spacing::k16;
+constexpr int kToggleNetworkGap = design::spacing::k8;
 constexpr int kPasswordActionGap = design::spacing::k16;
 constexpr int kActionButtonGap = design::spacing::k12;
-constexpr int kFooterButtonGap = design::spacing::k32;
+constexpr int kFooterButtonGap = design::spacing::k12;
 constexpr int kBackButtonGap = design::spacing::k12;
+// Three switch rows share the top of the page with the network list, so they are a little
+// shorter than the default menu row (the switch's focus ring still fits: 44 + 2 * 10).
+constexpr int kToggleRowHeight = 64;
 
 struct Layout {
     UiRect wifi_toggle = {};
     UiRect access_point_toggle = {};
+    UiRect battery_saver_toggle = {};
     UiRect network_list = {};
     UiRect password_input = {};
     UiRect scan_button = {};
@@ -48,13 +52,16 @@ Layout BuildLayout(int portrait_width, int portrait_height, const WifiPageState&
 
     MenuToggleStyle wifi_toggle_style = {};
     wifi_toggle_style.width = page_width;
+    wifi_toggle_style.height = kToggleRowHeight;
     const UiRect wifi_toggle =
         MenuToggleBounds(page_x, title_bottom + kHeadingBottomPadding, wifi_toggle_style);
-    MenuToggleStyle ap_toggle_style = wifi_toggle_style;
-    ap_toggle_style.bottom_border_thickness = 0;
     const UiRect access_point_toggle =
-        MenuToggleBounds(page_x, wifi_toggle.bottom(), ap_toggle_style);
-    const int content_top = access_point_toggle.bottom() + kToggleNetworkGap;
+        MenuToggleBounds(page_x, wifi_toggle.bottom(), wifi_toggle_style);
+    MenuToggleStyle saver_toggle_style = wifi_toggle_style;
+    saver_toggle_style.bottom_border_thickness = 0;
+    const UiRect battery_saver_toggle =
+        MenuToggleBounds(page_x, access_point_toggle.bottom(), saver_toggle_style);
+    const int content_top = battery_saver_toggle.bottom() + kToggleNetworkGap;
 
     ButtonStyle back_style = {};
     back_style.width = page_width;
@@ -100,6 +107,7 @@ Layout BuildLayout(int portrait_width, int portrait_height, const WifiPageState&
     return {
         .wifi_toggle = wifi_toggle,
         .access_point_toggle = access_point_toggle,
+        .battery_saver_toggle = battery_saver_toggle,
         .network_list = network_list,
         .password_input = password_input,
         .scan_button = scan_button,
@@ -121,6 +129,8 @@ UiRect WifiPageItemBounds(int portrait_width,
             return layout.wifi_toggle;
         case WifiPageItemId::kEnableApToggle:
             return layout.access_point_toggle;
+        case WifiPageItemId::kBatterySaverToggle:
+            return layout.battery_saver_toggle;
         case WifiPageItemId::kNetworkList:
             return layout.network_list;
         case WifiPageItemId::kPasswordInput:
@@ -171,6 +181,7 @@ UiRect WifiPageItemVisualBounds(int portrait_width,
         }
         case WifiPageItemId::kWifiToggle:
         case WifiPageItemId::kEnableApToggle:
+        case WifiPageItemId::kBatterySaverToggle:
         case WifiPageItemId::kScanButton:
         case WifiPageItemId::kConnectButton:
         case WifiPageItemId::kBack:
@@ -223,6 +234,7 @@ bool HitTestWifiPageItem(int portrait_width,
     constexpr WifiPageItemId kItems[] = {
         WifiPageItemId::kWifiToggle,
         WifiPageItemId::kEnableApToggle,
+        WifiPageItemId::kBatterySaverToggle,
         WifiPageItemId::kPasswordVisibilityButton,
         WifiPageItemId::kPasswordInput,
         WifiPageItemId::kScanButton,
@@ -325,11 +337,15 @@ void DrawWifiPage(uint8_t* framebuffer,
                    layout.wifi_toggle.x, layout.wifi_toggle.y, state.wifi_toggle,
                    wifi_toggle_style);
 
-    MenuToggleStyle ap_toggle_style = wifi_toggle_style;
-    ap_toggle_style.bottom_border_thickness = 0;
     DrawMenuToggle(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
                    layout.access_point_toggle.x, layout.access_point_toggle.y,
-                   state.access_point_toggle, ap_toggle_style);
+                   state.access_point_toggle, wifi_toggle_style);
+
+    MenuToggleStyle saver_toggle_style = wifi_toggle_style;
+    saver_toggle_style.bottom_border_thickness = 0;
+    DrawMenuToggle(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+                   layout.battery_saver_toggle.x, layout.battery_saver_toggle.y,
+                   state.battery_saver_toggle, saver_toggle_style);
 
     const NetworkListStyle network_style =
         BuildNetworkListStyle(layout.network_list.width, layout.network_list.height);

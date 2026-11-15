@@ -17,6 +17,7 @@ enum class WifiPageItemId : uint8_t {
     kNone = 0,
     kWifiToggle,
     kEnableApToggle,
+    kBatterySaverToggle,
     kNetworkList,
     kPasswordInput,
     kPasswordVisibilityButton,
@@ -32,6 +33,8 @@ struct WifiPageState {
     // Settings hub.
     MenuToggleState wifi_toggle = {};
     MenuToggleState access_point_toggle = {};
+    // Keeps the radio off between syncs (main/wifi_saver_runtime).
+    MenuToggleState battery_saver_toggle = {};
     NetworkListState network_list = {};
     PasswordInputState password_input = {};
     ButtonState scan_button = {};

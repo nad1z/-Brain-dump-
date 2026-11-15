@@ -307,9 +307,22 @@ back to the Home screen, skipping the hub.
 
 From the top:
 
-1. **WiFi** — toggle WiFi on or off.
+1. **WiFi** — toggle WiFi on or off. With **Battery saver** on, switching
+   WiFi on means "sync now": the device connects, sends any recordings
+   waiting for a transcript, and turns WiFi off again about a minute after
+   it's done. Switching it off keeps it off until you switch it on again.
 2. **Access Point** — toggle Brain Dump's own setup hotspot on or off.
-3. A list of nearby networks — each row indicates whether it's open or
+3. **Battery saver** — keeps WiFi off most of the time to save battery
+   (off by default). Recordings are saved right away as usual but wait for
+   their transcript; WiFi comes on by itself to send them when three are
+   waiting, when one has waited 30 minutes, or whenever the device is
+   plugged in. So with Battery saver on, a transcript (and Auto filing, and
+   a reminder's due date) can take up to half an hour to appear unless you
+   sync. Summaries and the Details page's **Transcribe** button also need
+   WiFi — switch WiFi on first. If the device can't reach a network, it
+   gives up after two minutes and waits 15 minutes before trying again on
+   its own. While the setup hotspot is on, Battery saver does nothing.
+4. A list of nearby networks — each row indicates whether it's open or
    password-protected, its signal strength, and whether it's the one
    you're currently connected to. Select a network, enter its password if
    it needs one (there's a show/hide toggle for what you've typed), and

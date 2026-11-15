@@ -14,6 +14,7 @@ class WifiPageCoordinator {
 public:
     WifiPageCoordinator();
 
+    void SetBatterySaver(bool enabled) { battery_saver_ = enabled; }
     void RefreshFromService(const wifi_service::UiState& ui_state,
                             const wifi_service::ScanSnapshot& scan_snapshot);
     void Show();
@@ -71,6 +72,7 @@ private:
     // interactions/runtime layer, not the coordinator (same split Settings used).
     bool wifi_enabled_ = true;
     bool access_point_mode_ = false;
+    bool battery_saver_ = false;
 };
 
 #endif  // WIFI_PAGE_COORDINATOR_H_

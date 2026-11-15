@@ -8,6 +8,17 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added (battery)
+
+- **Battery saver** switch on the Wi-Fi page (off by default). It keeps the
+  radio off and brings it up in bursts to send recordings waiting for a
+  transcript: when three are waiting, when one has waited 30 minutes, or
+  on USB power. Switching Wi-Fi on while it is enabled means "sync now".
+  A wake that cannot connect gives up after 2 minutes and backs off for
+  15. The decision logic is a pure function with host tests.
+- The Wi-Fi page's switch rows and spacing are slightly tighter to make
+  room for the new switch without shrinking the network list.
+
 ### Changed
 
 - **Renamed to Brain Dump.** The boot splash shows a Brain Dump mark and

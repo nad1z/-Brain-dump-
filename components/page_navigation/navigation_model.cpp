@@ -110,28 +110,32 @@ NavigationModel BuildWifiPageNavigationModel()
             1);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageNetworkList,
+            NavigationItemRole::kWifiPageBatterySaverToggle,
             2);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPagePasswordInput,
+            NavigationItemRole::kWifiPageNetworkList,
             3);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPagePasswordVisibilityButton,
+            NavigationItemRole::kWifiPagePasswordInput,
             4);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageScanButton,
+            NavigationItemRole::kWifiPagePasswordVisibilityButton,
             5);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageConnectButton,
+            NavigationItemRole::kWifiPageScanButton,
             6);
     AddItem(model,
             NavigationItemSection::kWifiPageControls,
-            NavigationItemRole::kWifiPageBackButton,
+            NavigationItemRole::kWifiPageConnectButton,
             7);
+    AddItem(model,
+            NavigationItemSection::kWifiPageControls,
+            NavigationItemRole::kWifiPageBackButton,
+            8);
     AddFooterItems(model, /*is_home_screen=*/false);
     return model;
 }

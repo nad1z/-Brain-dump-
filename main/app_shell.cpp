@@ -28,6 +28,7 @@
 #include "freertos/task.h"
 #include "firmware_update_service.h"
 #include "gemini_service.h"
+#include "wifi_saver_runtime.h"
 #include "imu_service.h"
 #include "input_focus_runtime.h"
 #include "input_runtime_setup.h"
@@ -2261,6 +2262,7 @@ void Run()
     InitRecordingService();
     InitTranscriptionService();
     InitTranscriptionRetryService();
+    wifi_saver_runtime::Init();
     InitRecordingSessionService();
     InitFooterRuntime();
     StartShutdownTask();

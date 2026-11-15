@@ -41,6 +41,7 @@
 #include "ui_refresh_runtime.h"
 #include "wifi_page_interactions.h"
 #include "wifi_page_runtime.h"
+#include "wifi_saver_runtime.h"
 #include "wifi_service.h"
 
 namespace page_input_runtime {
@@ -797,7 +798,11 @@ ButtonResult ApplyWifiActivateResult(const wifi_page_interactions::ActivateResul
     };
     callbacks.toggle_wifi = []() {
         const wifi_service::UiState state = wifi_service::GetUiState();
-        wifi_service::SetWifiEnabled(!state.wifi_enabled);
+        wifi_saver_runtime::HandleWifiToggle(state.wifi_enabled);
+    };
+    callbacks.toggle_battery_saver = []() {
+        wifi_saver_runtime::SetEnabled(!wifi_saver_runtime::IsEnabled());
+        (void)wifi_page_runtime::SyncFromService(true);
     };
     callbacks.toggle_access_point = []() {
         const wifi_service::UiState state = wifi_service::GetUiState();

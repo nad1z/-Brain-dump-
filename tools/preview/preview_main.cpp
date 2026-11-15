@@ -11,6 +11,7 @@
 #include "epaper_ui/splash_screen.h"
 #include "epaper_ui/status_bar.h"
 #include "epaper_ui/time_page.h"
+#include "epaper_ui/wifi_page.h"
 
 namespace {
 
@@ -139,6 +140,32 @@ void RenderSplash(const std::string& out_dir, const std::string& name)
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+// Wi-Fi page with the Battery saver switch on (focused) and a couple of networks listed.
+void RenderWifiPage(const std::string& out_dir, const std::string& name)
+{
+    epaper_ui::WifiPageState state = {};
+    state.wifi_toggle = {.label_text = "WiFi", .toggle_state = epaper_ui::ToggleVisualState::kOff};
+    state.access_point_toggle = {.label_text = "Access Point",
+                                 .toggle_state = epaper_ui::ToggleVisualState::kOff};
+    state.battery_saver_toggle = {.label_text = "Battery saver",
+                                  .toggle_state = epaper_ui::ToggleVisualState::kFocusOn};
+    state.network_list.status = epaper_ui::NetworkListStatus::kNetworksFound;
+    state.network_list.networks = {
+        {.ssid_text = "Home", .current_network = true, .private_network = true},
+        {.ssid_text = "Office", .private_network = true},
+    };
+    state.password_input.label_text = "Password";
+    state.password_input.placeholder_text = "Enter password";
+    state.scan_button.label_text = "Scan";
+    state.connect_button.label_text = "Connect";
+    state.back.label_text = "Back";
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawWifiPage(frame.data(), kRawWidth, kRawHeight, kPortraitWidth, kPortraitHeight,
+                            state, StatusBar("17:05"), epaper_ui::GlobalFooterState{});
+    const std::string path = out_dir + "/" + name + ".pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -147,6 +174,7 @@ int main(int argc, char** argv)
     RenderTimePage(out_dir, "time_page_12h", "05", "PM", "5:05 PM");
     RenderTimePage(out_dir, "time_page_24h", "17", "24H", "17:05");
     RenderSplash(out_dir, "boot_splash");
+    RenderWifiPage(out_dir, "wifi_page");
     RenderSaveMenu(out_dir, "save_menu");
     RenderDetailsPage(out_dir, "details_english",
                       "Idea for the brain dump device: sync reminders to the calendar, and keep "

@@ -265,6 +265,12 @@ epaper_ui::WifiPageState WifiPageCoordinator::BuildState() const
             access_point_mode_,
             IsRoleFocused(page_navigation::NavigationItemRole::kWifiPageEnableApToggle)),
     };
+    state.battery_saver_toggle = {
+        .label_text = "Battery saver",
+        .toggle_state = BuildToggleState(
+            battery_saver_,
+            IsRoleFocused(page_navigation::NavigationItemRole::kWifiPageBatterySaverToggle)),
+    };
     state.network_list = {
         .status = network_status_,
         .focused =
