@@ -101,6 +101,16 @@ Layout BuildLayout(int portrait_width, int portrait_height, const WifiPageState&
     const UiRect connect_button = ButtonBounds(
         page_x + button_width + kActionButtonGap, action_y, state.connect_button, action_style);
 
+    if (!state.show_network_controls) {
+        return {
+            .wifi_toggle = wifi_toggle,
+            .access_point_toggle = access_point_toggle,
+            .battery_saver_toggle = battery_saver_toggle,
+            .back = ButtonBounds(page_x, battery_saver_toggle.bottom() + kSectionGap, state.back,
+                                 back_style),
+        };
+    }
+
     const int back_y =
         std::max(scan_button.bottom(), connect_button.bottom()) + kBackButtonGap;
     const UiRect back = ButtonBounds(page_x, back_y, state.back, back_style);
@@ -136,6 +146,9 @@ UiRect WifiPageItemBounds(int portrait_width,
         case WifiPageItemId::kPasswordInput:
             return layout.password_input;
         case WifiPageItemId::kPasswordVisibilityButton: {
+            if (!state.show_network_controls) {
+                return {};
+            }
             PasswordInputStyle style = {};
             style.width = layout.password_input.width;
             return PasswordInputVisibilityButtonBounds(layout.password_input.x,
@@ -161,6 +174,11 @@ UiRect WifiPageItemVisualBounds(int portrait_width,
                                 WifiPageItemId item)
 {
     const Layout layout = BuildLayout(portrait_width, portrait_height, state);
+    if (!state.show_network_controls &&
+        (item == WifiPageItemId::kNetworkList || item == WifiPageItemId::kPasswordInput ||
+         item == WifiPageItemId::kPasswordVisibilityButton)) {
+        return {};
+    }
     switch (item) {
         case WifiPageItemId::kNetworkList: {
             const NetworkListStyle style =
@@ -347,6 +365,7 @@ void DrawWifiPage(uint8_t* framebuffer,
                    layout.battery_saver_toggle.x, layout.battery_saver_toggle.y,
                    state.battery_saver_toggle, saver_toggle_style);
 
+    if (state.show_network_controls) {
     const NetworkListStyle network_style =
         BuildNetworkListStyle(layout.network_list.width, layout.network_list.height);
     DrawNetworkList(framebuffer,
@@ -394,6 +413,7 @@ void DrawWifiPage(uint8_t* framebuffer,
                {.variant = ButtonVariant::kPrimary,
                 .width = layout.connect_button.width,
                 .center_label = true});
+    }  // show_network_controls
 
     DrawButton(framebuffer,
                raw_width,

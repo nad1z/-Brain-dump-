@@ -8,6 +8,7 @@
 #include "epaper_ui/global_footer.h"
 #include "epaper_ui/menu_container.h"
 #include "epaper_ui/menu_item.h"
+#include "epaper_ui/menu_toggle.h"
 #include "epaper_ui/status_bar.h"
 
 namespace epaper_ui {
@@ -38,6 +39,8 @@ struct SettingsPageState {
     // Replays the onboarding carousel -- a one-shot action, not a heading, so it sits below the
     // menu rather than being one of the 4 headings above.
     ButtonState manual_button = {};
+    // Silent mode switch, between the menu and Manual.
+    MenuToggleState silent_toggle = {};
 
     bool operator==(const SettingsPageState& other) const = default;
 };
@@ -53,6 +56,9 @@ bool HitTestSettingsMenuItem(int portrait_width,
                              int x,
                              int y,
                              int* index);
+UiRect SettingsSilentToggleBounds(int portrait_width,
+                                  int portrait_height,
+                                  const SettingsPageState& state);
 UiRect SettingsManualButtonBounds(int portrait_width,
                                   int portrait_height,
                                   const SettingsPageState& state);

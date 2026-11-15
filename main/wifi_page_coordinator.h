@@ -55,6 +55,9 @@ private:
 
     static epaper_ui::ToggleVisualState BuildToggleState(bool enabled, bool focused);
     void InitializePasswordInput();
+    // Rebuilds the focus model when Wi-Fi is switched on/off (network controls come and go),
+    // keeping focus on the same control when it still exists.
+    void SyncNavigationModel();
     int NetworkCount() const;
 
     page_navigation::NavigationModel navigation_model_ =

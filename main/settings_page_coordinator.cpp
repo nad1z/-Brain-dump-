@@ -52,6 +52,16 @@ epaper_ui::SettingsPageState SettingsPageCoordinator::BuildState() const
         }
     }
 
+    const bool silent_focused = IsRoleFocused(NavigationItemRole::kSettingsSilentToggle);
+    epaper_ui::ToggleVisualState silent_visual = epaper_ui::ToggleVisualState::kOff;
+    if (silent_) {
+        silent_visual = silent_focused ? epaper_ui::ToggleVisualState::kFocusOn
+                                       : epaper_ui::ToggleVisualState::kOn;
+    } else if (silent_focused) {
+        silent_visual = epaper_ui::ToggleVisualState::kFocusOff;
+    }
+    state.silent_toggle = {.label_text = "Silent mode", .toggle_state = silent_visual};
+
     state.manual_button = {
         .label_text = "Manual",
         .selected = IsRoleFocused(NavigationItemRole::kSettingsManualOnboardingButton),

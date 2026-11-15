@@ -15,6 +15,7 @@
 #include "notes_page_runtime.h"
 #include "onboarding_page_interactions.h"
 #include "onboarding_page_runtime.h"
+#include "feedback_service.h"
 #include "overlay_runtime.h"
 #include "todos_page_interactions.h"
 #include "todos_page_runtime.h"
@@ -798,6 +799,11 @@ ButtonResult ApplySettingsActivateResult(const settings_page_interactions::Activ
     callbacks.show_onboarding = []() {
         // Deferred so the screen change happens after input dispatch; app_shell polls for it.
         onboarding_page_runtime::RequestManualLaunch();
+    };
+    callbacks.toggle_silent = []() {
+        feedback_service::SetSilent(!feedback_service::IsSilent());
+        (void)settings_page_runtime::UpdateDisplayStateAndRequestRefresh(
+            display_service::RefreshMode::kPartial);
     };
     settings_page_interactions::ApplyPrimaryActivateResult(activation, callbacks);
     if (result.footer_item != footer_runtime::FooterFocusItem::kNone) {

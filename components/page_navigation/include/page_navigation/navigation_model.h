@@ -64,6 +64,7 @@ enum class NavigationItemRole : uint8_t {
     kSettingsMenuTodos,
     kSettingsMenuTopics,
     kSettingsMenuAbout,
+    kSettingsSilentToggle,
     kSettingsManualOnboardingButton,
     kWifiPageWifiToggle,
     kWifiPageEnableApToggle,
@@ -132,7 +133,9 @@ struct NavigationModel {
 };
 
 NavigationModel BuildSettingsPageNavigationModel();
-NavigationModel BuildWifiPageNavigationModel();
+// With include_network_controls false (Wi-Fi switched off) the network list, password, Scan
+// and Connect are left out: they are hidden on screen and must not take focus.
+NavigationModel BuildWifiPageNavigationModel(bool include_network_controls = true);
 NavigationModel BuildTimePageNavigationModel();
 NavigationModel BuildSettingsStoragePageNavigationModel();
 NavigationModel BuildSettingsTodosPageNavigationModel();

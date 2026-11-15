@@ -130,6 +130,10 @@ bool BeginAuthentication();
 // time, in submission order; never call this from a UI/input task with a job that blocks.
 void RunOnWorker(std::function<void()> job);
 void SetNetworkState(bool connected, bool access_point_mode);
+// Spoken language for transcription: "auto" (default), "he", "en" or "he+en". Stored in NVS
+// ("gemini"/"lang") and sent in the transcription prompt; set from the web page.
+std::string GetTranscriptionLanguage();
+bool SetTranscriptionLanguage(const std::string& language);
 void RegisterPortalRoutes(httpd_handle_t server);
 
 const char* ApiKeySourceName(ApiKeySource source);

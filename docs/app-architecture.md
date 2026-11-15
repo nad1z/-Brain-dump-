@@ -835,6 +835,8 @@ Runtime-persisted settings live in service-owned NVS namespaces:
 - `wifi`: `ssid`, `password`
 - `timezone`: `enabled`, `tz_name`, `location`, `hour24` (12/24-hour display
   preference), `time_src`, `ntp_sync`, `ntp_epoch`
+- `feedback`: `silent` (Silent mode, `feedback_service`)
+- `gemini`: `api_key`, `lang` (transcription language)
 - `wifi_saver`: `enabled` (Battery saver, `main/wifi_saver_runtime.cpp`; policy in the
   pure, host-tested `main/wifi_saver_policy.cpp`)
 - `rec_archive_cfg`: `days` (todo archive-after-days setting, `recording_archive_service`;

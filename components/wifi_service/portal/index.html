@@ -113,6 +113,21 @@
               inputmode="text"
             ></ui-input>
 
+            <ui-select
+              id="transcriptionLanguageSelect"
+              label="Language you speak"
+              aria-label="Transcription language"
+            >
+              <option value="auto">Detect automatically</option>
+              <option value="he">Hebrew</option>
+              <option value="en">English</option>
+              <option value="he+en">Hebrew and English mixed</option>
+            </ui-select>
+            <p class="form-helper-text">
+              Recordings are transcribed in this language and never translated. Saved as soon as
+              you change it.
+            </p>
+
             <ui-button
               slot="footer"
               id="geminiClearBtn"

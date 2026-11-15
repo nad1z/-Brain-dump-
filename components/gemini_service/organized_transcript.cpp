@@ -38,6 +38,50 @@ bool IsDueFormat(const std::string& due)
 
 }  // namespace
 
+bool IsKnownTranscriptionLanguage(const std::string& language)
+{
+    return language == "auto" || language == "he" || language == "en" || language == "he+en";
+}
+
+std::string BuildTranscriptPrompt(const std::string& language, const std::string& now_text)
+{
+    std::string language_rule;
+    if (language == "he") {
+        language_rule =
+            "The speaker is speaking Hebrew. Write the transcript in Hebrew, in Hebrew letters. "
+            "Keep any English words exactly as spoken, in English letters. Do not translate.";
+    } else if (language == "en") {
+        language_rule = "The speaker is speaking English. Write the transcript in English.";
+    } else if (language == "he+en") {
+        language_rule =
+            "The speaker mixes Hebrew and English. Write every Hebrew word in Hebrew letters and "
+            "every English word in English letters, exactly as spoken. Do not translate either "
+            "language into the other.";
+    } else {
+        language_rule =
+            "Write the transcript in the language that is spoken, in that language's own script "
+            "(for example Hebrew in Hebrew letters). Never translate it into English or any other "
+            "language; keep mixed-language speech as spoken.";
+    }
+
+    std::string prompt =
+        "Transcribe the speech in this audio and organise it. Reply with one JSON object and "
+        "nothing else, with these string fields:\n"
+        "\"transcript\": the verbatim transcript. ";
+    prompt += language_rule;
+    prompt +=
+        "\n"
+        "\"type\": \"task\" if the speaker is telling themselves to do something or to be "
+        "reminded of something, \"idea\" for an idea, plan or thing to explore, otherwise "
+        "\"note\".\n"
+        "\"title\": a title of at most six words, in the same language as the transcript.\n"
+        "\"due\": if the speaker gives a day or time for a task, that moment in local time as "
+        "YYYY-MM-DD or YYYY-MM-DDTHH:MM (24-hour); otherwise an empty string. Resolve relative "
+        "expressions such as \"tomorrow\" against the current local date and time, which is: ";
+    prompt += now_text;
+    return prompt;
+}
+
 OrganizedTranscript ParseOrganizedTranscript(const std::string& reply)
 {
     OrganizedTranscript result = {};

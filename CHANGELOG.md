@@ -8,6 +8,25 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added (sound and language)
+
+- **Silent mode** switch on the Settings screen: turns the codec output
+  and the speaker amplifier off (NVS `feedback`/`silent`), so cues, the
+  post-recording review and Details playback are all skipped; recording
+  still works and goes straight to the save menu.
+- **Transcription language** on the setup page's Gemini section: Detect
+  automatically / Hebrew / English / Hebrew and English mixed (NVS
+  `gemini`/`lang`, `GET`/`PATCH /api/settings/transcription`). Gemini's
+  API has no language parameter for audio, so the choice is stated in the
+  prompt, together with an explicit "never translate". This fixes Hebrew
+  recordings sometimes coming back translated to English. Titles now follow
+  the transcript's language instead of always being English.
+
+### Changed (Wi-Fi page)
+
+- With Wi-Fi switched off, the Wi-Fi page hides the network list, password
+  and Scan/Connect, and they leave the focus order.
+
 ### Added (sharing)
 
 - **Share over WiFi** (Settings > Storage). Starts a PIN-protected web page

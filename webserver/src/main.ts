@@ -27,6 +27,7 @@ import firmwareUpdateIcon from './assets/firmware_update.svg?raw';
 import reminderIcon from './assets/reminder.svg?raw';
 import infoIcon from './assets/info.svg?raw';
 import {
+  fetchApiJson,
   fetchGeminiModuleJson,
   fetchPortalJson,
   fetchTimeRuntimeJson,
@@ -279,8 +280,40 @@ async function loadInitialStatus() {
     timeController.fetchTimeSettingsStatus(),
     wifiController.checkStatus(),
     loadGeminiSettings(),
+    loadTranscriptionLanguage(),
     firmwareUpdateController.refreshVersion(),
   ]);
+}
+
+async function loadTranscriptionLanguage() {
+  const select = document.getElementById('transcriptionLanguageSelect') as ValidatableField | null;
+  if (!select) {
+    return;
+  }
+  try {
+    const data = await fetchApiJson<{ success: boolean; language?: string }>(
+      '/api/settings/transcription'
+    );
+    if (data.language) {
+      select.value = data.language;
+    }
+  } catch (error) {
+    console.error('Transcription language load failed:', error);
+  }
+  select.addEventListener('change', async () => {
+    try {
+      await fetchApiJson('/api/settings/transcription', {
+        method: 'PATCH',
+        body: JSON.stringify({ language: select.value }),
+      });
+      setGeminiNotification('Transcription language saved.', 'success');
+    } catch (error) {
+      setGeminiNotification(
+        error instanceof Error ? error.message : 'Could not save the language.',
+        'error'
+      );
+    }
+  });
 }
 
 async function loadGeminiSettings() {

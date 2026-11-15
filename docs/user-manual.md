@@ -80,6 +80,12 @@ From there you can:
   won't be transcribed.
 - **Set your timezone and the current time/date** — needed for accurate
   timestamps on your recordings and for the "Today" grouping on Notes/Todos.
+- **Choose the language you speak** — in the same section, *Language you
+  speak*: **Detect automatically** (the default), **Hebrew**, **English**,
+  or **Hebrew and English mixed**. Recordings are always transcribed in the
+  language you speak, never translated; picking your language explicitly
+  helps when automatic detection gets it wrong (for example a short Hebrew
+  recording coming back in English). Titles follow the same language.
 
 You can come back to WiFi and time settings later from the device itself
 (see [Settings](#settings) below — they're the Network and Time pages in
@@ -288,7 +294,7 @@ Enable OTG), and they'll show up here.
 ## Settings
 
 Settings is a hub, like a phone's settings app: six headings, each
-opening its own page, plus one action below them:
+opening its own page, then a switch and one action below them:
 
 - **Network** — WiFi and Access Point.
 - **Time** — timezone and clock.
@@ -296,6 +302,12 @@ opening its own page, plus one action below them:
 - **Todos** — todo archiving.
 - **Topics** — create, rename, and delete topics.
 - **About** — firmware version and acknowledgments.
+- **Silent mode** — turns the speaker off completely: no button sounds, no
+  start/stop sounds when recording, no playback of a recording right after
+  you make it (the save menu appears straight away), and the Details
+  page's Play does nothing. The speaker's amplifier is switched off too,
+  which saves a little battery. Stays on after a restart until you switch
+  it off.
 - **Manual** — replays the first-time onboarding carousel. This one isn't
   a heading — it's a direct action, since there's nothing to configure on
   it.
@@ -309,7 +321,9 @@ back to the Home screen, skipping the hub.
 
 From the top:
 
-1. **WiFi** — toggle WiFi on or off. With **Battery saver** on, switching
+1. **WiFi** — toggle WiFi on or off. While WiFi is off, the network list,
+   password and Scan/Connect buttons are hidden, since there is nothing to
+   show. With **Battery saver** on, switching
    WiFi on means "sync now": the device connects, sends any recordings
    waiting for a transcript, and turns WiFi off again about a minute after
    it's done. Switching it off keeps it off until you switch it on again.

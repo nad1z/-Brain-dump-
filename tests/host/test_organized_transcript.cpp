@@ -69,3 +69,48 @@ TEST(broken_json_falls_back_to_whole_reply)
     CHECK_EQ(ParseOrganizedTranscript(reply).transcript, reply);
     CHECK(ParseOrganizedTranscript("").transcript.empty());
 }
+
+using gemini_service::BuildTranscriptPrompt;
+using gemini_service::IsKnownTranscriptionLanguage;
+
+TEST(language_settings_are_validated)
+{
+    CHECK(IsKnownTranscriptionLanguage("auto"));
+    CHECK(IsKnownTranscriptionLanguage("he"));
+    CHECK(IsKnownTranscriptionLanguage("en"));
+    CHECK(IsKnownTranscriptionLanguage("he+en"));
+    CHECK(!IsKnownTranscriptionLanguage(""));
+    CHECK(!IsKnownTranscriptionLanguage("fr"));
+}
+
+TEST(hebrew_prompt_asks_for_hebrew_letters_and_no_translation)
+{
+    const std::string prompt = BuildTranscriptPrompt("he", "2026-11-15 10:00, Sunday");
+    CHECK(prompt.find("speaking Hebrew") != std::string::npos);
+    CHECK(prompt.find("Hebrew letters") != std::string::npos);
+    CHECK(prompt.find("Do not translate") != std::string::npos);
+    CHECK(prompt.find("2026-11-15 10:00, Sunday") != std::string::npos);
+}
+
+TEST(auto_prompt_forbids_translating_to_english)
+{
+    const std::string prompt = BuildTranscriptPrompt("auto", "now");
+    CHECK(prompt.find("Never translate it into English") != std::string::npos);
+    // Unknown values fall back to the same automatic rule.
+    CHECK_EQ(BuildTranscriptPrompt("xx", "now"), prompt);
+}
+
+TEST(titles_follow_the_transcript_language)
+{
+    const std::string prompt = BuildTranscriptPrompt("he", "now");
+    CHECK(prompt.find("in the same language as the transcript") != std::string::npos);
+    CHECK(prompt.find("in English even when") == std::string::npos);
+}
+
+TEST(prompt_still_asks_for_the_json_fields)
+{
+    const std::string prompt = BuildTranscriptPrompt("he+en", "now");
+    for (const char* field : {"\"transcript\"", "\"type\"", "\"title\"", "\"due\""}) {
+        CHECK(prompt.find(field) != std::string::npos);
+    }
+}

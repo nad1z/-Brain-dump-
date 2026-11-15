@@ -19,6 +19,7 @@ enum class ActivateIntent : uint8_t {
     kShowTopics,
     kShowAbout,
     kShowOnboarding,
+    kToggleSilent,
 };
 
 struct ActivateResult {
@@ -38,6 +39,7 @@ struct ActivateCallbacks {
     std::function<void()> show_topics;
     std::function<void()> show_about;
     std::function<void()> show_onboarding;
+    std::function<void()> toggle_silent;
 };
 
 ActivateResult HandlePrimaryActivate(const SettingsPageCoordinator& coordinator);

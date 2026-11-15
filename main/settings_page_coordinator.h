@@ -21,7 +21,12 @@ public:
     const page_navigation::NavigationModel& navigation_model() const { return navigation_model_; }
     const page_navigation::RovingFocus& focus() const { return focus_; }
 
+public:
+    // Silent mode switch state (feedback_service), refreshed by the runtime before drawing.
+    void SetSilent(bool silent) { silent_ = silent; }
+
 private:
+    bool silent_ = false;
     page_navigation::NavigationModel navigation_model_ =
         page_navigation::BuildSettingsPageNavigationModel();
     page_navigation::RovingFocus focus_{navigation_model_.item_count, 0};

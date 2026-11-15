@@ -3,6 +3,7 @@
 #include <atomic>
 #include <mutex>
 
+#include "feedback_service.h"
 #include "page_navigation/navigation_model.h"
 #include "page_navigation/page_focus_projection.h"
 #include "settings_page_coordinator.h"
@@ -91,6 +92,7 @@ bool FooterProjectionChangedForFocusIndexes(int old_focus_index, int new_focus_i
 
 epaper_ui::SettingsPageState BuildStateLocked()
 {
+    s_coordinator.SetSilent(feedback_service::IsSilent());
     return s_coordinator.BuildState();
 }
 
