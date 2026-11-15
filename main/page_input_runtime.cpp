@@ -42,6 +42,7 @@
 #include "wifi_page_interactions.h"
 #include "wifi_page_runtime.h"
 #include "wifi_saver_runtime.h"
+#include "share_service.h"
 #include "wifi_service.h"
 
 namespace page_input_runtime {
@@ -315,6 +316,39 @@ ButtonResult ApplySettingsStorageActivateResult(
             return;
         }
         (void)overlay_runtime::ShowStorageModalConfirmFormat();
+    };
+    callbacks.toggle_sharing = []() {
+        if (share_service::IsActive()) {
+            share_service::Stop();
+            return;
+        }
+        const char* problem = nullptr;
+        switch (share_service::Start()) {
+            case share_service::StartResult::kStarted:
+            case share_service::StartResult::kAlreadyActive: {
+                const share_service::State state = share_service::GetState();
+                (void)overlay_runtime::ShowShareModal(state.url, state.pin);
+                return;
+            }
+            case share_service::StartResult::kNotConnected:
+                problem = "Connect to WiFi first";
+                break;
+            case share_service::StartResult::kNoSdCard:
+                problem = "Insert an SD card first";
+                break;
+            case share_service::StartResult::kFailed:
+            default:
+                problem = "Sharing could not start";
+                break;
+        }
+        (void)overlay_runtime::ShowToastForDuration(
+            [problem]() {
+                epaper_ui::ToastState toast = {};
+                toast.visible = true;
+                toast.body_text = problem;
+                return toast;
+            }(),
+            2500);
     };
     callbacks.enable_otg = []() {
         // The button is a toggle: while OTG is up it exits, otherwise it enters. Entering

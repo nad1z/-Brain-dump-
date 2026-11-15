@@ -22,6 +22,8 @@ struct InputResult {
     bool request_format_sd_card = false;
     // Set by the OTG modal's single "Disable OTG mode" action.
     bool request_exit_usb_mode = false;
+    // Set by the sharing card's single "Stop sharing" action.
+    bool request_stop_sharing = false;
     // Set by the Topics delete-confirm modal's "Delete" action.
     bool request_delete_topic = false;
     // Set by the Book list delete-confirm modal's "Delete" action.

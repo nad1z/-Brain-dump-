@@ -8,6 +8,22 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added (sharing)
+
+- **Share over WiFi** (Settings > Storage). Starts a PIN-protected web page
+  on the home network (new `share_service`; four-digit PIN shown on the
+  device, five wrong tries lock it for a minute; stops after 10 idle
+  minutes, on Wi-Fi disconnect, or from the device). The page lists
+  recordings with transcript, type, title and due date, downloads audio,
+  exports everything as one Obsidian-ready Markdown file, and adds or
+  deletes books. EPUB books are converted to plain text in the browser, so
+  the device never unzips or parses HTML. The same Recordings and Books
+  sections appear on the setup hotspot page.
+- Web page tests: Markdown export unit tests and a Chromium test of the
+  share page against a fake device (PIN gate, list, export, audio
+  download, EPUB conversion and upload); CI also checks the committed
+  portal files match the web source.
+
 ### Added (battery)
 
 - **Battery saver** switch on the Wi-Fi page (off by default). It keeps the

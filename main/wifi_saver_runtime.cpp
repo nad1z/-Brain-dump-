@@ -8,6 +8,7 @@
 #include "nvs.h"
 #include "power_service.h"
 #include "recording_archive_service.h"
+#include "share_service.h"
 #include "summary_service.h"
 #include "transcription_retry_service.h"
 #include "transcription_service.h"
@@ -71,7 +72,8 @@ bool NetworkWorkInFlight()
 {
     return transcription_service::GetSnapshot().request_in_flight ||
            transcription_retry_service::GetSnapshot().batch_in_flight ||
-           summary_service::GetSnapshot().request.in_flight || wifi_service::IsBusy();
+           summary_service::GetSnapshot().request.in_flight || wifi_service::IsBusy() ||
+           share_service::IsActive();
 }
 
 void Check()

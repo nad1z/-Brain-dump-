@@ -84,6 +84,7 @@ enum class NavigationItemRole : uint8_t {
     kTimePageSave,
     kTimePageBackButton,
     kSettingsStorageEnableOtgButton,
+    kSettingsStorageShareButton,
     kSettingsStorageFormatSdButton,
     kSettingsStorageBackButton,
     kSettingsTodosArchiveAfterInput,

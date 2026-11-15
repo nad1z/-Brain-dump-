@@ -28,11 +28,13 @@ g++ -std=c++20 -O1 -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-ini
     -I"$root/components/recording_archive_service/include" \
     -I"$root/components/recording_service/include" \
     -I"$root/components/gemini_service/include" \
+    -I"$root/components/share_service/include" \
     "$here"/*.cpp \
     "$root"/components/epaper_ui/*.cpp \
     "$root"/components/project_assets/*.cpp \
     "$root"/components/page_navigation/*.cpp \
     "$root/components/gemini_service/organized_transcript.cpp" \
+    "$root/components/share_service/share_names.cpp" \
     "$root/main/timeline_format.cpp" \
     "$root/main/time_page_coordinator.cpp" \
     "$root/main/wifi_saver_policy.cpp" \

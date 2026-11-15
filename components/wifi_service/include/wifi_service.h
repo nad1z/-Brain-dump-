@@ -68,6 +68,9 @@ esp_err_t Init();
 void Start();
 void SetEventHandler(EventHandler handler, void* context);
 void SetPortalRouteRegistrar(PortalRouteRegistrar registrar, void* context);
+// Registers the web page itself (/, /index.js, /index.css) on another HTTP server -- used by
+// share_service, which serves the same page on the home network.
+esp_err_t RegisterPortalPageRoutes(httpd_handle_t server);
 
 // Returns true while it is a bad moment to put the radio on air. A scan is the noisiest
 // RF the device does -- channel hopping at TX power -- and an e-paper refresh drives the

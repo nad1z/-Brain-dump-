@@ -34,12 +34,15 @@ enum class CardModalPurpose : uint8_t {
     kStorageFormatError,
     kTopicsConfirmDelete,
     kBookListConfirmDelete,
+    kShareActive,
 };
 
 std::mutex s_state_mutex;
 bool s_initialized = false;
 epaper_ui::CardModalState s_card_modal_state = {};
 CardModalPurpose s_card_modal_purpose = CardModalPurpose::kNone;
+// Body of the sharing card (address and PIN change every time sharing starts).
+std::string s_share_card_body = {};
 epaper_ui::SelectModalState s_select_modal_state = {};
 epaper_ui::KeyboardState s_keyboard_state = {};
 epaper_ui::ToastState s_toast_state = {};
@@ -88,6 +91,13 @@ epaper_ui::CardModalState BuildCardModalState(CardModalPurpose purpose)
             // modal is only dismissed by its own buttons, so this is inherently sticky.
             state.body_text = "Preparing OTG. Please wait...";
             state.action_labels = {};
+            break;
+        case CardModalPurpose::kShareActive:
+            state.title_text = "Sharing over WiFi";
+            state.body_text = s_share_card_body;
+            // Like the OTG card: the only way out, so the address and PIN stay on screen
+            // (at no power cost on e-paper) for as long as sharing is on.
+            state.action_labels = {"Stop sharing"};
             break;
         case CardModalPurpose::kStorageUsbActive:
             state.title_text = "OTG mode enabled";
@@ -640,6 +650,23 @@ esp_err_t ShowStorageModalUsbActive()
     return ShowCardModal(CardModalPurpose::kStorageUsbActive, "usb_active");
 }
 
+esp_err_t ShowShareModal(const std::string& url, const std::string& pin)
+{
+    {
+        std::lock_guard<std::mutex> lock(s_state_mutex);
+        s_share_card_body = "On a phone or computer on the same WiFi, open " + url +
+                            " and enter PIN " + pin +
+                            ". Sharing stops when you close this, or after 10 idle minutes.";
+    }
+    return ShowCardModal(CardModalPurpose::kShareActive, "share_active");
+}
+
+bool IsShareModalVisible()
+{
+    std::lock_guard<std::mutex> lock(s_state_mutex);
+    return s_card_modal_state.visible && s_card_modal_purpose == CardModalPurpose::kShareActive;
+}
+
 esp_err_t ShowStorageModalUsbNoCable()
 {
     return ShowCardModal(CardModalPurpose::kStorageUsbNoCable, "usb_no_cable");
@@ -1030,6 +1057,9 @@ app_interaction::InputResult HandleButtonEvent(const button_service::ButtonEvent
                                 // Sole action: hand the card back to the app.
                                 result.request_exit_usb_mode = true;
                                 break;
+                            case CardModalPurpose::kShareActive:
+                                result.request_stop_sharing = true;
+                                break;
                             case CardModalPurpose::kTopicsConfirmDelete:
                                 if (index == 1) {
                                     result.request_delete_topic = true;
@@ -1153,7 +1183,8 @@ done_locked:
     result.play_feedback = play_click;
     result.feedback_cue = app_interaction::FeedbackCue::kClick;
     if (result.consumed &&
-        (request_refresh || result.request_format_sd_card || result.request_exit_usb_mode) &&
+        (request_refresh || result.request_format_sd_card || result.request_exit_usb_mode ||
+         result.request_stop_sharing) &&
         !dismiss_modal && !dismiss_select_modal &&
         !result.select_modal_submitted) {
         ESP_LOGI(kTag, "Card modal button action=%s",

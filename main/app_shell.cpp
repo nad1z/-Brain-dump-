@@ -29,6 +29,7 @@
 #include "firmware_update_service.h"
 #include "gemini_service.h"
 #include "wifi_saver_runtime.h"
+#include "share_service.h"
 #include "imu_service.h"
 #include "input_focus_runtime.h"
 #include "input_runtime_setup.h"
@@ -1479,6 +1480,7 @@ void RegisterWifiBackendRoutes(httpd_handle_t server, void*)
     timezone_service::RegisterPortalRoutes(server);
     gemini_service::RegisterPortalRoutes(server);
     firmware_update_service::SetPrecondition(FirmwareUpdateAllowed);
+    share_service::RegisterSetupRoutes(server);
     firmware_update_service::RegisterPortalRoutes(server);
 }
 
@@ -1539,6 +1541,13 @@ void HandleWifiEvent(const wifi_service::Event& event, void*)
     const bool wifi_connected = event.ui_state.connected;
     const bool was_wifi_connected =
         s_wifi_connected.exchange(wifi_connected, std::memory_order_relaxed);
+    if (!wifi_connected && was_wifi_connected && share_service::IsActive()) {
+        // The address on the sharing card is no longer reachable.
+        share_service::Stop();
+        if (overlay_runtime::IsShareModalVisible()) {
+            (void)overlay_runtime::DismissStorageModal();
+        }
+    }
     if (wifi_connected && !was_wifi_connected) {
         // gemini_service's `ready` flag doesn't reset across a disconnect/reconnect once
         // authenticated at boot, so HandleGeminiEvent's ready-edge retry trigger only ever
@@ -1622,6 +1631,11 @@ void HandleDispatchedButtonEvent(const button_service::ButtonEventInfo& event)
                          esp_err_to_name(overlay_err));
             }
         }
+    }
+    if (overlay_result.request_stop_sharing) {
+        share_service::Stop();
+        (void)settings_storage_page_runtime::UpdateDisplayStateAndRequestRefresh(
+            display_service::RefreshMode::kPartial);
     }
     if (overlay_result.request_exit_usb_mode) {
         const esp_err_t err = storage_service::RequestExitUsbMode();
@@ -2263,6 +2277,14 @@ void Run()
     InitTranscriptionService();
     InitTranscriptionRetryService();
     wifi_saver_runtime::Init();
+    // Sharing stopped on its own (10 idle minutes): take its card off the screen.
+    share_service::SetStoppedHandler(
+        [](void*) {
+            if (overlay_runtime::IsShareModalVisible()) {
+                (void)overlay_runtime::DismissStorageModal();
+            }
+        },
+        nullptr);
     InitRecordingSessionService();
     InitFooterRuntime();
     StartShutdownTask();

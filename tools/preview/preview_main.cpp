@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "epaper_ui/details_page.h"
+#include "epaper_ui/card_modal.h"
 #include "epaper_ui/select_modal.h"
+#include "epaper_ui/settings_storage_page.h"
 #include "epaper_ui/splash_screen.h"
 #include "epaper_ui/status_bar.h"
 #include "epaper_ui/time_page.h"
@@ -166,6 +168,34 @@ void RenderWifiPage(const std::string& out_dir, const std::string& name)
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+// Storage page, then the same page with the "Sharing over WiFi" card on top.
+void RenderStorageAndShare(const std::string& out_dir)
+{
+    epaper_ui::SettingsStoragePageState state = {};
+    state.storage_status = {.has_sd_card = true, .free_space_text = "28.6 GB", .used_percent = 4};
+    state.enable_otg_button.label_text = "Enable OTG";
+    state.share_button = {.label_text = "Share over WiFi", .selected = true};
+    state.format_sd_button.label_text = "Format SD";
+    state.back.label_text = "Back";
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawSettingsStoragePage(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                                       kPortraitHeight, state, StatusBar("17:05"),
+                                       epaper_ui::GlobalFooterState{});
+    std::string path = out_dir + "/storage_page.pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+
+    epaper_ui::CardModalState card = {};
+    card.visible = true;
+    card.title_text = "Sharing over WiFi";
+    card.body_text = "On a phone or computer on the same WiFi, open http://192.168.1.23 and enter "
+                     "PIN 4821. Sharing stops when you close this, or after 10 idle minutes.";
+    card.action_labels = {"Stop sharing"};
+    epaper_ui::DrawCardModal(frame.data(), kRawWidth, kRawHeight, kPortraitWidth, kPortraitHeight,
+                             card);
+    path = out_dir + "/share_card.pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -175,6 +205,7 @@ int main(int argc, char** argv)
     RenderTimePage(out_dir, "time_page_24h", "17", "24H", "17:05");
     RenderSplash(out_dir, "boot_splash");
     RenderWifiPage(out_dir, "wifi_page");
+    RenderStorageAndShare(out_dir);
     RenderSaveMenu(out_dir, "save_menu");
     RenderDetailsPage(out_dir, "details_english",
                       "Idea for the brain dump device: sync reminders to the calendar, and keep "

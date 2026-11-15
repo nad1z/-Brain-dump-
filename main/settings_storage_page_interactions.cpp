@@ -17,6 +17,12 @@ ActivateResult HandlePrimaryActivate(const SettingsStoragePageCoordinator& coord
         result.intent = ActivateIntent::kEnableOtg;
         return result;
     }
+    if (coordinator.IsRoleFocused(NavigationItemRole::kSettingsStorageShareButton)) {
+        result.handled = true;
+        result.play_activate_cue = true;
+        result.intent = ActivateIntent::kToggleSharing;
+        return result;
+    }
     if (coordinator.IsRoleFocused(NavigationItemRole::kSettingsStorageFormatSdButton)) {
         result.handled = true;
         result.play_activate_cue = true;
@@ -57,6 +63,11 @@ void ApplyPrimaryActivateResult(const ActivateResult& result, const ActivateCall
         case ActivateIntent::kEnableOtg:
             if (callbacks.enable_otg) {
                 callbacks.enable_otg();
+            }
+            break;
+        case ActivateIntent::kToggleSharing:
+            if (callbacks.toggle_sharing) {
+                callbacks.toggle_sharing();
             }
             break;
         case ActivateIntent::kShowFormatSdModal:

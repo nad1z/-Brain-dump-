@@ -11,7 +11,9 @@
     "build-storybook": "storybook build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "node --test tests/*.test.ts",
+    "test:e2e": "node tests/share_page.e2e.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -22,6 +24,7 @@
     "globals": "^16.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
+    "playwright": "^1.63.0",
     "prettier": "3.6.1",
     "storybook": "^10.4.0",
     "typescript": "~5.8.3",

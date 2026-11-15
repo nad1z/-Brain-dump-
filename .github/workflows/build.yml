@@ -63,6 +63,42 @@ jobs:
           sudo apt-get install -y -q libcjson-dev
           tests/host/run.sh
 
+  web:
+    name: Web page (lint, build, tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webserver
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint and build
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Committed portal files match the source
+        run: |
+          for f in index.html index.js index.css; do
+            cmp "dist/$f" "../components/wifi_service/portal/$f" || {
+              echo "components/wifi_service/portal/$f is stale: run npm run build and copy dist/ there"; exit 1; }
+          done
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Browser test against a fake device
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
   screens:
     name: Screen previews
     runs-on: ubuntu-latest

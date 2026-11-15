@@ -260,8 +260,10 @@ with this topic yet" and no Summarize button.
 ## Books
 
 The Home screen's **Books** item opens a simple on-device reader for plain
-`.txt` files — copy them onto the SD card's `books` folder (over USB mass
-storage, from Settings > Storage) and they'll show up here.
+`.txt` files — add them from a phone or computer with **Share over WiFi**
+(Settings > Storage; EPUB books are converted to text for you), or copy
+them onto the SD card's `books` folder over USB (Settings > Storage >
+Enable OTG), and they'll show up here.
 
 - Selecting **Books** shows the list of `.txt` files found in that folder.
   Tilt the rocker to move between them, and select one to open a menu with:
@@ -354,7 +356,25 @@ the time on each recording — as 24-hour (for example `17:05` instead of
    explicitly **Disable OTG mode** to get it back (there's no accidental
    way out of this while the cable's connected — that's intentional, so
    Brain Dump doesn't touch the card while your computer has it mounted).
-3. **Format SD** — erases the SD card completely. Brain Dump asks you to
+3. **Share over WiFi** — lets a phone or computer on the same WiFi network
+   see your recordings and manage your books, without a cable. The device
+   must be connected to WiFi first. A card shows the address to open (for
+   example `http://192.168.1.23`) and a four-digit PIN, which is new every
+   time you start sharing; enter the PIN on the page that opens. From
+   there you can:
+   - read every recording's transcript, newest first, with its type, title
+     and due date, and download its audio;
+   - **Export for Obsidian** — download all transcripts as one Markdown
+     file you can drop into an Obsidian vault (Tasks become checkboxes with
+     their due date);
+   - add books (`.txt` or `.epub` — an EPUB is converted to plain text by
+     the phone or computer before it is sent) and delete books.
+
+   Press **Stop sharing** on the device when you're done. Sharing also
+   stops on its own after 10 minutes without any requests, or if WiFi
+   disconnects. The same Recordings and Books sections also appear on the
+   setup page when you use the Access Point hotspot (no PIN there).
+4. **Format SD** — erases the SD card completely. Brain Dump asks you to
    confirm ("Formatting the SD card will erase everything on the card") —
    there's no undo once you confirm.
 

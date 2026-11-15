@@ -1,5 +1,7 @@
 #include "settings_storage_page_coordinator.h"
 
+#include "share_service.h"
+
 #include <cstdio>
 #include <string>
 
@@ -84,6 +86,12 @@ epaper_ui::SettingsStoragePageState SettingsStoragePageCoordinator::BuildState(
         .label_text = otg_label,
         .selected = IsRoleFocused(
             page_navigation::NavigationItemRole::kSettingsStorageEnableOtgButton),
+    };
+
+    state.share_button = {
+        .label_text = share_service::IsActive() ? "Stop sharing" : "Share over WiFi",
+        .selected =
+            IsRoleFocused(page_navigation::NavigationItemRole::kSettingsStorageShareButton),
     };
 
     std::string_view format_label = "Format SD";

@@ -114,6 +114,10 @@ npm run lint
 cp dist/index.html dist/index.js dist/index.css ../components/wifi_service/portal/
 ```
 
+Web tests: `npm test` (Node's built-in runner over `webserver/tests/*.test.ts`) and
+`npm run test:e2e` (Chromium via Playwright against a fake device; run `npm run build` first).
+CI runs both and fails if `components/wifi_service/portal/` does not match a fresh build.
+
 `webserver/` is the source of truth; `components/wifi_service/portal/` is
 tracked, generated build output — don't hand-edit it. See `webserver/README.md`
 for the source layout (`src/components/` web components, `src/portal/`

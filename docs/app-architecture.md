@@ -1165,6 +1165,20 @@ board layer. On Sticky, `storage_service` asks the board layer to initialize the
 shared SPI bus first and passes `external_spi_bus=true`, so the SD wrapper only
 adds its SDSPI device to the existing bus.
 
+### `components/share_service`
+
+"Share over WiFi". Owns a second, on-demand HTTP server (port 80, own ctrl port) that runs only
+while the device is a Wi-Fi station and the user started sharing from Settings > Storage. It
+serves the same embedded web page (`wifi_service::RegisterPortalPageRoutes`) plus
+`/api/share/status`, `/api/recordings`, `/api/recordings/audio`, and `/api/books`
+(GET/POST/DELETE). Every request on this server needs the `X-Share-Pin` header (four digits,
+regenerated per session, five failures lock it for 60 s). It stops after 10 idle minutes (its
+timer calls a stopped handler so `app_shell` can take the card down), on a Wi-Fi disconnect,
+or from the card's "Stop sharing" action. The same routes, without the PIN, are registered on
+the setup hotspot's server through `app_shell`'s portal route registrar. Name/URL/PIN helpers
+are in the pure, host-tested `share_names.cpp`. EPUB conversion is deliberately not here: the
+web page converts EPUB to text in the browser before uploading.
+
 ### `components/storage_service`
 
 This is the app-facing storage layer. It composes `board` pin definitions with

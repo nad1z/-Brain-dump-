@@ -172,9 +172,11 @@ NavigationModel BuildSettingsStoragePageNavigationModel()
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
             NavigationItemRole::kSettingsStorageEnableOtgButton, 0);
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
-            NavigationItemRole::kSettingsStorageFormatSdButton, 1);
+            NavigationItemRole::kSettingsStorageShareButton, 1);
     AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
-            NavigationItemRole::kSettingsStorageBackButton, 2);
+            NavigationItemRole::kSettingsStorageFormatSdButton, 2);
+    AddItem(model, NavigationItemSection::kSettingsStoragePageControls,
+            NavigationItemRole::kSettingsStorageBackButton, 3);
     AddFooterItems(model, /*is_home_screen=*/false);
     return model;
 }

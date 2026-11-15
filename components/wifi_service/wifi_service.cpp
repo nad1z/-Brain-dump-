@@ -871,7 +871,7 @@ void StartConfigPortal()
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     // Root + WiFi API (scan/configure/status/disconnect) + portal assets (index.js/index.css) plus
     // the timezone_service and gemini_service portal routes registered via the registrar below.
-    config.max_uri_handlers = 24;
+    config.max_uri_handlers = 32;
     // The firmware-update upload handler runs on this task: flash writes plus the final image
     // verification (SHA-256) need more headroom than the 4 KB default.
     config.stack_size = 8192;
@@ -1745,6 +1745,33 @@ void SetScanDeferProvider(ScanDeferProvider provider, void* context)
     std::lock_guard<std::mutex> lock(s_state_mutex);
     s_scan_defer_provider = provider;
     s_scan_defer_context = context;
+}
+
+esp_err_t RegisterPortalPageRoutes(httpd_handle_t server)
+{
+    if (server == nullptr) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    httpd_uri_t root = {};
+    root.uri = "/";
+    root.method = HTTP_GET;
+    root.handler = HandlePortalRoot;
+    httpd_uri_t index_js = {};
+    index_js.uri = kPortalIndexJsUri;
+    index_js.method = HTTP_GET;
+    index_js.handler = HandlePortalIndexJs;
+    httpd_uri_t index_css = {};
+    index_css.uri = kPortalIndexCssUri;
+    index_css.method = HTTP_GET;
+    index_css.handler = HandlePortalIndexCss;
+    esp_err_t err = httpd_register_uri_handler(server, &root);
+    if (err == ESP_OK) {
+        err = httpd_register_uri_handler(server, &index_js);
+    }
+    if (err == ESP_OK) {
+        err = httpd_register_uri_handler(server, &index_css);
+    }
+    return err;
 }
 
 void SetPortalRouteRegistrar(PortalRouteRegistrar registrar, void* context)

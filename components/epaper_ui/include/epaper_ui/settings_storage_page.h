@@ -14,6 +14,7 @@ namespace epaper_ui {
 enum class SettingsStoragePageItemId : uint8_t {
     kNone = 0,
     kEnableOtgButton,
+    kShareButton,
     kFormatSdButton,
     kBack,
 };
@@ -23,6 +24,8 @@ struct SettingsStoragePageState {
     std::string_view title_text = "Storage";
     SdStatusState storage_status = {};
     ButtonState enable_otg_button = {};
+    // "Share over WiFi": serves recordings and books to a phone or computer on the network.
+    ButtonState share_button = {};
     ButtonState format_sd_button = {};
     // Returns to the Settings hub -- this page is reached only from there.
     ButtonState back = {};
