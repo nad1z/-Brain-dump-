@@ -1,6 +1,13 @@
 import { fetchUpdateRuntimeJson } from './api';
-import { UPDATE_RUNTIME_API, UPDATE_UPLOAD_API } from './constants';
-import type { CardField, StatusType } from './types';
+import {
+  UPDATE_CLOUD_CHECK_API,
+  UPDATE_CLOUD_INSTALL_API,
+  UPDATE_RUNTIME_API,
+  UPDATE_RUNTIME_POLL_INTERVAL_MS,
+  UPDATE_UPLOAD_API,
+} from './constants';
+import { describeCloudStatus } from './cloudUpdateText';
+import type { CardField, CloudUpdateStatus, StatusType } from './types';
 
 type FileUploadField = HTMLElement & {
   disabled: boolean;
@@ -16,6 +23,8 @@ interface FirmwareUpdateDeps {
   fileInput: FileUploadField;
   uploadBtn: HTMLButtonElement;
   versionText: HTMLElement;
+  cloudBtn: HTMLButtonElement;
+  cloudText: HTMLElement;
 }
 
 interface UploadReply {
@@ -26,10 +35,13 @@ interface UploadReply {
 // How long to wait for the device to come back after it restarts into the new firmware.
 const RESTART_POLL_INTERVAL_MS = 2000;
 const RESTART_POLL_ATTEMPTS = 45;
+// A cloud download of a ~2 MB image takes well under this; it bounds a stuck poll.
+const CLOUD_POLL_MAX_MS = 10 * 60 * 1000;
 
 export function createFirmwareUpdateController(deps: FirmwareUpdateDeps) {
   let busy = false;
   let installedVersion = '';
+  let cloud: CloudUpdateStatus | undefined;
 
   const notify = (message: string, type: StatusType = 'info') =>
     deps.card.setNotification(message, type);
@@ -39,6 +51,15 @@ export function createFirmwareUpdateController(deps: FirmwareUpdateDeps) {
   function syncControls() {
     deps.fileInput.disabled = busy;
     deps.uploadBtn.disabled = busy || !selectedFile();
+    const described = describeCloudStatus(cloud);
+    deps.cloudBtn.textContent = described.button;
+    deps.cloudBtn.disabled = busy || described.action === 'none' || cloud?.busy === true;
+  }
+
+  function showCloud(next: CloudUpdateStatus | undefined) {
+    cloud = next;
+    deps.cloudText.textContent = describeCloudStatus(cloud).text;
+    syncControls();
   }
 
   function showVersion(version: string) {
@@ -52,6 +73,7 @@ export function createFirmwareUpdateController(deps: FirmwareUpdateDeps) {
     const data = await fetchUpdateRuntimeJson(UPDATE_RUNTIME_API);
     const version = data.runtime?.version ?? '';
     showVersion(version);
+    showCloud(data.cloud);
     return version;
   }
 
@@ -139,11 +161,73 @@ export function createFirmwareUpdateController(deps: FirmwareUpdateDeps) {
     }
   }
 
+  // Polls until the device's check or download finishes (or it restarts into the update).
+  async function followCloudWork(previousVersion: string) {
+    const deadline = Date.now() + CLOUD_POLL_MAX_MS;
+    while (Date.now() < deadline) {
+      await new Promise(resolve => window.setTimeout(resolve, UPDATE_RUNTIME_POLL_INTERVAL_MS));
+      let data;
+      try {
+        data = await fetchUpdateRuntimeJson(UPDATE_RUNTIME_API);
+      } catch {
+        // The device stops answering while it restarts into the new firmware.
+        if (cloud?.state === 'DOWNLOADING' || cloud?.state === 'RESTARTING') {
+          notify('Update installed. The device is restarting…', 'info');
+          await waitForRestart(previousVersion);
+          return;
+        }
+        continue;
+      }
+      showCloud(data.cloud);
+      if (data.cloud?.state === 'RESTARTING') {
+        notify('Update installed. The device is restarting…', 'info');
+        await waitForRestart(previousVersion);
+        return;
+      }
+      if (!data.cloud?.busy) {
+        if (data.cloud?.state === 'ERROR' && data.cloud.message) {
+          notify(data.cloud.message, 'error');
+        }
+        return;
+      }
+    }
+    notify('The device is taking too long. Reload this page to see where it got to.', 'error');
+  }
+
+  async function runCloudAction() {
+    const action = describeCloudStatus(cloud).action;
+    if (busy || action === 'none') {
+      return;
+    }
+    busy = true;
+    syncControls();
+    const previousVersion = installedVersion;
+    try {
+      const data = await fetchUpdateRuntimeJson(
+        action === 'install' ? UPDATE_CLOUD_INSTALL_API : UPDATE_CLOUD_CHECK_API,
+        { method: 'POST' }
+      );
+      showCloud(data.cloud);
+      if (action === 'install') {
+        notify('Downloading. Keep this page open and the device powered.', 'info');
+      }
+      await followCloudWork(previousVersion);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'The device could not start.', 'error');
+    } finally {
+      busy = false;
+      syncControls();
+    }
+  }
+
   function bind() {
     deps.fileInput.progressHidden = true;
     deps.fileInput.addEventListener('change', syncControls);
     deps.uploadBtn.addEventListener('click', () => {
       void upload();
+    });
+    deps.cloudBtn.addEventListener('click', () => {
+      void runCloudAction();
     });
     syncControls();
   }

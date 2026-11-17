@@ -188,6 +188,9 @@
 
         <ui-card id="firmwareUpdateCard" title="Firmware Update">
             <p id="firmwareVersionText" class="form-helper-text">Installed version: …</p>
+            <p id="firmwareCloudText" class="form-helper-text">
+              The device can download the latest release itself over its own Wi-Fi connection.
+            </p>
 
             <ui-file-upload
               id="firmwareFileInput"
@@ -199,10 +202,17 @@
 
             <ui-button
               slot="footer"
+              id="firmwareCloudBtn"
+              variant="secondary"
+            >
+              Check for updates
+            </ui-button>
+            <ui-button
+              slot="footer"
               id="firmwareUploadBtn"
               variant="primary"
             >
-              Install Update
+              Install from file
             </ui-button>
         </ui-card>
       </div>

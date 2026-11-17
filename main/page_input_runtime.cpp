@@ -16,6 +16,7 @@
 #include "onboarding_page_interactions.h"
 #include "onboarding_page_runtime.h"
 #include "feedback_service.h"
+#include "firmware_update_service.h"
 #include "overlay_runtime.h"
 #include "todos_page_interactions.h"
 #include "todos_page_runtime.h"
@@ -489,6 +490,30 @@ ButtonResult ApplySettingsAboutActivateResult(
     };
     callbacks.show_settings = [&result]() {
         result.footer_item = footer_runtime::FooterFocusItem::kSettings;
+    };
+    // The service reports progress through app_shell's status listener, which repaints this
+    // page; only a refusal (offline, low battery, ...) needs a word here.
+    const auto start_update_work = [](firmware_update_service::CloudStartResult (*start)(
+                                          std::string*)) {
+        std::string reason;
+        if (start(&reason) == firmware_update_service::CloudStartResult::kStarted ||
+            reason.empty()) {
+            return;
+        }
+        (void)overlay_runtime::ShowToastForDuration(
+            [&reason]() {
+                epaper_ui::ToastState toast = {};
+                toast.visible = true;
+                toast.body_text = reason;
+                return toast;
+            }(),
+            2500);
+    };
+    callbacks.check_for_updates = [&start_update_work]() {
+        start_update_work(&firmware_update_service::StartCloudCheck);
+    };
+    callbacks.install_update = [&start_update_work]() {
+        start_update_work(&firmware_update_service::StartCloudInstall);
     };
     settings_about_page_interactions::ApplyPrimaryActivateResult(activation, callbacks);
     if (result.footer_item != footer_runtime::FooterFocusItem::kNone) {

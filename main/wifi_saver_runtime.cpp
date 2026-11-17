@@ -5,6 +5,7 @@
 
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "firmware_update_service.h"
 #include "nvs.h"
 #include "power_service.h"
 #include "recording_archive_service.h"
@@ -73,7 +74,8 @@ bool NetworkWorkInFlight()
     return transcription_service::GetSnapshot().request_in_flight ||
            transcription_retry_service::GetSnapshot().batch_in_flight ||
            summary_service::GetSnapshot().request.in_flight || wifi_service::IsBusy() ||
-           share_service::IsActive();
+           share_service::IsActive() || firmware_update_service::IsCloudWorkInFlight() ||
+           firmware_update_service::IsUpdateInProgress();
 }
 
 void Check()

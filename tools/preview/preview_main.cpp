@@ -9,6 +9,7 @@
 #include "epaper_ui/details_page.h"
 #include "epaper_ui/card_modal.h"
 #include "epaper_ui/select_modal.h"
+#include "epaper_ui/settings_about_page.h"
 #include "epaper_ui/settings_page.h"
 #include "epaper_ui/settings_storage_page.h"
 #include "epaper_ui/splash_screen.h"
@@ -214,6 +215,24 @@ void RenderSettingsPage(const std::string& out_dir)
     std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
 }
 
+// About page with the software-update button: an update found (focused), and a failed check.
+void RenderAboutPage(const std::string& out_dir, const std::string& name,
+                     const std::string& status, const std::string& button, bool focused)
+{
+    epaper_ui::SettingsAboutPageState state = {};
+    state.version_text = "Version 1.8.0";
+    state.update_status_text = status;
+    state.update_button_label = button;
+    state.update_button_selected = focused;
+    state.back.label_text = "Back";
+    std::vector<uint8_t> frame = BlankFrame();
+    epaper_ui::DrawSettingsAboutPage(frame.data(), kRawWidth, kRawHeight, kPortraitWidth,
+                                     kPortraitHeight, state, StatusBar("17:05"),
+                                     epaper_ui::GlobalFooterState{});
+    const std::string path = out_dir + "/" + name + ".pgm";
+    std::printf("%s %s\n", WritePortraitPgm(frame, path) ? "wrote" : "FAILED", path.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -226,6 +245,12 @@ int main(int argc, char** argv)
     RenderWifiPage(out_dir, "wifi_page_off", false);
     RenderStorageAndShare(out_dir);
     RenderSettingsPage(out_dir);
+    RenderAboutPage(out_dir, "about_update_available",
+                    "Version 1.9.0 is available. It downloads over Wi-Fi and the device restarts "
+                    "by itself.",
+                    "Install version 1.9.0", true);
+    RenderAboutPage(out_dir, "about_update_error", "Connect to Wi-Fi first", "Check for updates",
+                    false);
     RenderSaveMenu(out_dir, "save_menu");
     RenderDetailsPage(out_dir, "details_english",
                       "Idea for the brain dump device: sync reminders to the calendar, and keep "

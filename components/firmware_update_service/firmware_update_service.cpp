@@ -17,6 +17,7 @@
 #include "esp_ota_ops.h"
 #include "esp_system.h"
 #include "esp_timer.h"
+#include "firmware_update_internal.h"
 
 namespace firmware_update_service {
 namespace {
@@ -93,6 +94,7 @@ void AppendRuntime(cJSON* root)
     cJSON_AddBoolToObject(runtime, "can_abort", false);
     cJSON_AddBoolToObject(runtime, "restart_required", state == State::kSuccess);
     cJSON_AddStringToObject(runtime, "error_message", error_message.c_str());
+    internal::AppendCloudRuntime(root);
 }
 
 esp_err_t SendJson(httpd_req_t* request, const char* status, bool success, const std::string& message)
@@ -139,7 +141,7 @@ esp_err_t Fail(httpd_req_t* request, const char* status, const std::string& mess
 {
     ESP_LOGW(kTag, "Update rejected: %s", message.c_str());
     SetState(State::kError, message);
-    s_in_progress.store(false, std::memory_order_relaxed);
+    internal::EndFailedUpdate();
     return SendJson(request, status, false, message);
 }
 
@@ -150,9 +152,8 @@ esp_err_t HandleRuntimeGet(httpd_req_t* request)
 
 esp_err_t HandleUpload(httpd_req_t* request)
 {
-    bool expected = false;
-    if (!s_in_progress.compare_exchange_strong(expected, true)) {
-        // Do not touch shared state: another upload owns it.
+    if (!internal::TryBeginUpdate()) {
+        // Do not touch shared state: another update owns it.
         return SendJson(request, "409 Conflict", false, "An update is already in progress");
     }
 
@@ -166,12 +167,10 @@ esp_err_t HandleUpload(httpd_req_t* request)
         return Fail(request, HTTPD_500, "Not enough memory to receive the update");
     }
 
-    const Precondition precondition = s_precondition.load(std::memory_order_relaxed);
     std::string refusal;
-    if (precondition != nullptr && !precondition(&refusal)) {
+    if (!internal::RunPrecondition(&refusal)) {
         DrainBody(request, total, buffer.get());
-        return Fail(request, "409 Conflict",
-                    refusal.empty() ? "The device cannot be updated right now" : refusal);
+        return Fail(request, "409 Conflict", refusal);
     }
 
     const esp_partition_t* target = esp_ota_get_next_update_partition(nullptr);
@@ -285,10 +284,43 @@ esp_err_t HandleUpload(httpd_req_t* request)
 
     ESP_LOGI(kTag, "Update written to %s; restarting", target->label);
     SetState(State::kSuccess);
-    // s_in_progress stays true: the device is about to restart and must not accept another.
+    // The update slot stays claimed: the device is about to restart and must not accept another.
     const esp_err_t response_err =
         SendJson(request, HTTPD_200, true, "Update installed. The device is restarting.");
+    internal::ScheduleRestart();
+    return response_err;
+}
 
+}  // namespace
+
+namespace internal {
+
+bool TryBeginUpdate()
+{
+    bool expected = false;
+    return s_in_progress.compare_exchange_strong(expected, true);
+}
+
+void EndFailedUpdate()
+{
+    s_in_progress.store(false, std::memory_order_relaxed);
+}
+
+bool RunPrecondition(std::string* reason)
+{
+    const Precondition precondition = s_precondition.load(std::memory_order_relaxed);
+    std::string refusal;
+    if (precondition == nullptr || precondition(&refusal)) {
+        return true;
+    }
+    if (reason != nullptr) {
+        *reason = refusal.empty() ? "The device cannot be updated right now" : refusal;
+    }
+    return false;
+}
+
+void ScheduleRestart()
+{
     if (s_restart_timer == nullptr) {
         esp_timer_create_args_t args = {};
         args.callback = [](void*) { esp_restart(); };
@@ -301,10 +333,9 @@ esp_err_t HandleUpload(httpd_req_t* request)
         esp_timer_start_once(s_restart_timer, kRestartDelayUs) != ESP_OK) {
         esp_restart();
     }
-    return response_err;
 }
 
-}  // namespace
+}  // namespace internal
 
 void SetPrecondition(Precondition precondition)
 {
@@ -335,6 +366,7 @@ void RegisterPortalRoutes(httpd_handle_t server)
         httpd_register_uri_handler(server, &upload) != ESP_OK) {
         ESP_LOGE(kTag, "Failed to register firmware update routes");
     }
+    internal::RegisterCloudRoutes(server);
 }
 
 }  // namespace firmware_update_service

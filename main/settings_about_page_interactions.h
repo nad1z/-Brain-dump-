@@ -13,6 +13,8 @@ enum class ActivateIntent : uint8_t {
     kNone = 0,
     kShowHome,
     kShowSettings,
+    kCheckForUpdates,
+    kInstallUpdate,
 };
 
 struct ActivateResult {
@@ -26,6 +28,8 @@ using FocusMoveResult = page_actions::FocusMoveOutcome;
 struct ActivateCallbacks {
     std::function<void()> show_home;
     std::function<void()> show_settings;
+    std::function<void()> check_for_updates;
+    std::function<void()> install_update;
 };
 
 ActivateResult HandlePrimaryActivate(const SettingsAboutPageCoordinator& coordinator);

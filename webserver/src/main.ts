@@ -198,6 +198,8 @@ const firmwareUpdateController = createFirmwareUpdateController({
   >[0]['fileInput'],
   uploadBtn: document.getElementById('firmwareUploadBtn') as HTMLButtonElement,
   versionText: document.getElementById('firmwareVersionText') as HTMLElement,
+  cloudBtn: document.getElementById('firmwareCloudBtn') as HTMLButtonElement,
+  cloudText: document.getElementById('firmwareCloudText') as HTMLElement,
 });
 
 function updatePageFade() {

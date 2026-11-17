@@ -36,5 +36,9 @@ inline constexpr UBaseType_t kPriorityTranscriptionRetry = 2;
 // last-good values off the UI path, so a poll that loses a race to SD/display
 // bus activity simply retries on the next cycle without ever blocking a refresh.
 inline constexpr UBaseType_t kPrioritySensorPoll = 2;
+// One-shot cloud firmware check/download (firmware_update_service), on the system/network core
+// beside the Wi-Fi driver. Same tier as the other network workers: a download that yields to UI
+// and audio only takes a little longer.
+inline constexpr UBaseType_t kPriorityFirmwareUpdate = 2;
 
 }  // namespace chroninkle_task_config

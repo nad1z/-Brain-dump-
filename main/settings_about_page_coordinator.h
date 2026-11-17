@@ -1,12 +1,21 @@
 #ifndef SETTINGS_ABOUT_PAGE_COORDINATOR_H_
 #define SETTINGS_ABOUT_PAGE_COORDINATOR_H_
 
+#include <cstdint>
+
 #include "epaper_ui/settings_about_page.h"
 #include "page_navigation/navigation_model.h"
 #include "page_navigation/roving_focus.h"
 
 class SettingsAboutPageCoordinator {
 public:
+    // What pressing the update button does right now, from firmware_update_service's state.
+    enum class UpdateAction : uint8_t {
+        kNone,     // a check or download is already running
+        kCheck,
+        kInstall,
+    };
+
     SettingsAboutPageCoordinator();
 
     void Show();
@@ -14,6 +23,7 @@ public:
     bool SetFocusIndex(int index);
     bool IsRoleFocused(page_navigation::NavigationItemRole role) const;
 
+    UpdateAction CurrentUpdateAction() const;
     epaper_ui::SettingsAboutPageState BuildState() const;
 
     const page_navigation::NavigationModel& navigation_model() const { return navigation_model_; }

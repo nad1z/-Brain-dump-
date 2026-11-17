@@ -11,6 +11,24 @@ ActivateResult HandlePrimaryActivate(const SettingsAboutPageCoordinator& coordin
 {
     ActivateResult result = {};
 
+    if (coordinator.IsRoleFocused(NavigationItemRole::kSettingsAboutUpdateButton)) {
+        result.handled = true;
+        switch (coordinator.CurrentUpdateAction()) {
+            case SettingsAboutPageCoordinator::UpdateAction::kCheck:
+                result.play_activate_cue = true;
+                result.intent = ActivateIntent::kCheckForUpdates;
+                break;
+            case SettingsAboutPageCoordinator::UpdateAction::kInstall:
+                result.play_activate_cue = true;
+                result.intent = ActivateIntent::kInstallUpdate;
+                break;
+            case SettingsAboutPageCoordinator::UpdateAction::kNone:
+            default:
+                // A check or download is already running: the press is swallowed.
+                break;
+        }
+        return result;
+    }
     if (coordinator.IsRoleFocused(NavigationItemRole::kSettingsAboutBackButton)) {
         // Returns to the Settings hub -- this page is only ever reached from there, so there's
         // no other source to track.
@@ -40,6 +58,16 @@ void ApplyPrimaryActivateResult(const ActivateResult& result, const ActivateCall
         case ActivateIntent::kShowSettings:
             if (callbacks.show_settings) {
                 callbacks.show_settings();
+            }
+            break;
+        case ActivateIntent::kCheckForUpdates:
+            if (callbacks.check_for_updates) {
+                callbacks.check_for_updates();
+            }
+            break;
+        case ActivateIntent::kInstallUpdate:
+            if (callbacks.install_update) {
+                callbacks.install_update();
             }
             break;
         case ActivateIntent::kNone:

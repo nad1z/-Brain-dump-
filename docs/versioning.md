@@ -51,4 +51,15 @@ git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
+Pushing the tag runs CI's **Publish release** job: it checks the tag matches
+`version.txt`, then publishes a GitHub Release with
+`braindump-X.Y.Z-update.bin`, `braindump-X.Y.Z-full-usb-flash.bin` and
+`braindump-manifest.json` (project, version, download URL, size, SHA-256),
+using this version's `CHANGELOG.md` section as the notes. Devices find it
+through `releases/latest/download/braindump-manifest.json`
+(`CONFIG_CHRONINKLE_FIRMWARE_UPDATE_MANIFEST_URL`), so **publishing a release
+is what makes it reach devices** — only tag what you want installed. A tag
+with a suffix (`v1.9.0-rc1`) is published as a pre-release, which `latest`
+skips: use that to test a build on your own device via the attached files.
+
 The pre-SemVer tag `v0.01` predates this scheme and can be ignored.

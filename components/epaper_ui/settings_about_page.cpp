@@ -18,13 +18,33 @@ constexpr int kHeadingBottomPadding = design::spacing::k24;
 constexpr int kVersionBodyGap = design::spacing::k24;
 constexpr int kBodyLineGap = design::spacing::k4;
 constexpr int kBackButtonGap = design::spacing::k24;
+constexpr int kVersionStatusGap = design::spacing::k8;
+constexpr int kStatusButtonGap = design::spacing::k12;
 
 struct Layout {
     int page_width = 0;
     int version_y = 0;
+    int status_y = 0;
     int body_y = 0;
+    UiRect update = {};
     UiRect back = {};
 };
+
+ButtonState UpdateButtonState(const SettingsAboutPageState& state)
+{
+    return {
+        .label_text = state.update_button_label,
+        .selected = state.update_button_selected,
+    };
+}
+
+std::vector<std::string> StatusLines(const SettingsAboutPageState& state, int page_width)
+{
+    if (state.update_status_text.empty()) {
+        return {};
+    }
+    return WrapTextToWidth(kBodyRole, state.update_status_text, page_width);
+}
 
 Layout BuildLayout(int portrait_width, int portrait_height, const SettingsAboutPageState& state)
 {
@@ -38,7 +58,19 @@ Layout BuildLayout(int portrait_width, int portrait_height, const SettingsAboutP
     layout.page_width = page_width;
     layout.version_y = title_bottom + kHeadingBottomPadding;
     const int version_bottom = layout.version_y + LineHeight(kVersionRole);
-    layout.body_y = version_bottom + kVersionBodyGap;
+
+    layout.status_y = version_bottom + kVersionStatusGap;
+    const std::vector<std::string> status_lines = StatusLines(state, page_width);
+    const int status_height =
+        static_cast<int>(status_lines.size()) * (LineHeight(kBodyRole) + kBodyLineGap);
+    const int update_y = layout.status_y + status_height +
+                         (status_lines.empty() ? kVersionBodyGap - kVersionStatusGap
+                                               : kStatusButtonGap);
+    ButtonStyle update_style = {};
+    update_style.width = page_width;
+    update_style.center_label = true;
+    layout.update = ButtonBounds(page_x, update_y, UpdateButtonState(state), update_style);
+    layout.body_y = layout.update.y + layout.update.height + kVersionBodyGap;
 
     const std::vector<std::string> body_lines =
         WrapTextToWidth(kBodyRole, std::string(state.acknowledgment_text), page_width);
@@ -63,6 +95,8 @@ UiRect SettingsAboutPageItemBounds(int portrait_width,
 {
     const Layout layout = BuildLayout(portrait_width, portrait_height, state);
     switch (item) {
+        case SettingsAboutPageItemId::kUpdate:
+            return layout.update;
         case SettingsAboutPageItemId::kBack:
             return layout.back;
         case SettingsAboutPageItemId::kNone:
@@ -82,13 +116,16 @@ bool HitTestSettingsAboutPageItem(int portrait_width,
         *item = SettingsAboutPageItemId::kNone;
     }
 
-    const UiRect bounds = SettingsAboutPageItemBounds(portrait_width, portrait_height, state,
-                                                       SettingsAboutPageItemId::kBack);
-    if (!bounds.IsEmpty() && bounds.Contains(x, y)) {
-        if (item != nullptr) {
-            *item = SettingsAboutPageItemId::kBack;
+    for (const SettingsAboutPageItemId candidate :
+         {SettingsAboutPageItemId::kUpdate, SettingsAboutPageItemId::kBack}) {
+        const UiRect bounds =
+            SettingsAboutPageItemBounds(portrait_width, portrait_height, state, candidate);
+        if (!bounds.IsEmpty() && bounds.Contains(x, y)) {
+            if (item != nullptr) {
+                *item = candidate;
+            }
+            return true;
         }
-        return true;
     }
     return false;
 }
@@ -121,10 +158,21 @@ void DrawSettingsAboutPage(uint8_t* framebuffer,
                        kSideInset, layout.version_y, state.version_text, kVersionRole,
                        design::color::kTextPrimary);
 
+    const int body_line_height = LineHeight(kBodyRole);
+    int cursor_y = layout.status_y;
+    for (const std::string& line : StatusLines(state, layout.page_width)) {
+        DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+                           kSideInset, cursor_y, line, kBodyRole, design::color::kTextPrimary);
+        cursor_y += body_line_height + kBodyLineGap;
+    }
+
+    DrawButton(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
+               layout.update.x, layout.update.y, UpdateButtonState(state),
+               {.width = layout.update.width, .center_label = true});
+
     const std::vector<std::string> body_lines =
         WrapTextToWidth(kBodyRole, std::string(state.acknowledgment_text), layout.page_width);
-    int cursor_y = layout.body_y;
-    const int body_line_height = LineHeight(kBodyRole);
+    cursor_y = layout.body_y;
     for (const std::string& line : body_lines) {
         DrawTypographyText(framebuffer, raw_width, raw_height, portrait_width, portrait_height,
                            kSideInset, cursor_y, line, kBodyRole, design::color::kTextPrimary);

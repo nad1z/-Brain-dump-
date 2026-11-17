@@ -301,7 +301,7 @@ opening its own page, then a switch and one action below them:
 - **Storage** — SD card status and management.
 - **Todos** — todo archiving.
 - **Topics** — create, rename, and delete topics.
-- **About** — firmware version and acknowledgments.
+- **About** — firmware version, **Check for updates**, and acknowledgments.
 - **Silent mode** — turns the speaker off completely: no button sounds, no
   start/stop sounds when recording, no playback of a recording right after
   you make it (the save menu appears straight away), and the Details
@@ -402,8 +402,10 @@ still archive individual items manually). Default is 7 days.
 
 ### About
 
-Shows the installed firmware version and an acknowledgment: Brain Dump
-began as a fork of Followup, created by ALXV Labs.
+Shows the installed firmware version, a **Check for updates** button (see
+[Updating the firmware over Wi-Fi](#updating-the-firmware-over-wi-fi)), and
+an acknowledgment: Brain Dump is a fork of Chroninkle, which began as a fork
+of Followup, created by ALXV Labs.
 
 ### Manage topics
 
@@ -436,23 +438,44 @@ names are typed in English.
 ## Updating the firmware over Wi-Fi
 
 Once a firmware version with this feature is on the device, later updates
-don't need a USB cable.
+don't need a USB cable. A device still running Chroninkle (or an older
+Brain Dump without this feature) needs one USB install first.
 
-1. Get the update file — the one whose name ends in `-update.bin`.
-2. On the device, open **Settings > Network** and turn **Access Point** on.
-3. On your phone or computer, join the Brain Dump hotspot and open the setup
+### From the device (no phone or computer needed)
+
+1. Make sure the device is connected to Wi-Fi.
+2. Open **Settings > About** and press **Check for updates**.
+3. If a newer version exists, the button changes to **Install version
+   X.Y.Z**. Press it.
+4. The button shows the download progress. Keep the device powered; it
+   restarts by itself into the new version when the download is installed.
+
+If the device says "You have the latest version", there is nothing to do.
+The update comes straight from the project's latest release on GitHub;
+nothing is saved to your phone, computer or SD card.
+
+### From the setup web page
+
+1. On the device, open **Settings > Network** and turn **Access Point** on.
+2. On your phone or computer, join the Brain Dump hotspot and open the setup
    page (`http://192.168.4.1`).
-4. In the **Firmware Update** section, choose the file and press **Install
-   Update**. The page shows the installed version and the upload progress.
-5. Keep the page open and the device powered until it restarts by itself,
+3. In the **Firmware Update** section, either:
+   - press **Check for updates**, then **Install version X.Y.Z** — the
+     device downloads it itself, so it also needs to be connected to your
+     Wi-Fi; or
+   - choose an update file (the one whose name ends in `-update.bin`, from
+     the project's Releases page) and press **Install from file**.
+4. Keep the page open and the device powered until it restarts by itself,
    about a minute. The page then shows the new version.
+
+### Either way
 
 If the battery is below 30% and the device isn't plugged in, it refuses the
 update and asks you to plug it in first.
 
-If the file is the wrong one or arrives damaged, the device refuses it and
-keeps running the version it had. If a new version fails to start, the
-device goes back to the previous one on its own.
+If the download or file is the wrong one or arrives damaged, the device
+refuses it and keeps running the version it had. If a new version fails to
+start, the device goes back to the previous one on its own.
 
 The setup hotspot has no password, so anyone in range could reach this page
 while it is on — turn **Access Point** off again when you're done.

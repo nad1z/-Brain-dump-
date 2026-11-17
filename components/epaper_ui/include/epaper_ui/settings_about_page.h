@@ -13,6 +13,7 @@ namespace epaper_ui {
 
 enum class SettingsAboutPageItemId : uint8_t {
     kNone = 0,
+    kUpdate,
     kBack,
 };
 
@@ -21,6 +22,12 @@ struct SettingsAboutPageState {
     std::string_view title_text = "About";
     // e.g. "Version 0.7.0" -- built at BuildState() time from esp_app_get_description().
     std::string version_text;
+    // Software update: one or two wrapped lines of status ("You have the latest version.",
+    // an error, ...) under the version, then the update button. Owned strings (not
+    // string_views) because both change at runtime and the state is copied into the renderer.
+    std::string update_status_text;
+    std::string update_button_label = "Check for updates";
+    bool update_button_selected = false;
     std::string_view acknowledgment_text =
         "Brain Dump is a fork of Chroninkle, which began as a fork of Followup, created by "
         "ALXV Labs. Thank you to both for the design and implementation this project builds on.";

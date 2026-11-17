@@ -1475,11 +1475,39 @@ bool FirmwareUpdateAllowed(std::string* reason)
     return false;
 }
 
+// Updates from the internet need a working station connection (the setup hotspot alone has no
+// internet behind it).
+bool FirmwareUpdateNetworkReady(std::string* reason)
+{
+    if (wifi_service::GetUiState().connected) {
+        return true;
+    }
+    if (reason != nullptr) {
+        *reason = "Connect to Wi-Fi first";
+    }
+    return false;
+}
+
+// Called from the update worker task as a cloud check/download progresses.
+void HandleFirmwareUpdateStatus()
+{
+    if (ScreenActiveForRefresh(display_service::ScreenId::kSettingsAbout)) {
+        (void)settings_about_page_runtime::UpdateDisplayStateAndRequestRefresh(
+            display_service::RefreshMode::kPartial);
+    }
+}
+
+void InitFirmwareUpdateService()
+{
+    firmware_update_service::SetPrecondition(FirmwareUpdateAllowed);
+    firmware_update_service::SetNetworkCheck(FirmwareUpdateNetworkReady);
+    firmware_update_service::SetCloudStatusListener(HandleFirmwareUpdateStatus);
+}
+
 void RegisterWifiBackendRoutes(httpd_handle_t server, void*)
 {
     timezone_service::RegisterPortalRoutes(server);
     gemini_service::RegisterPortalRoutes(server);
-    firmware_update_service::SetPrecondition(FirmwareUpdateAllowed);
     share_service::RegisterSetupRoutes(server);
     firmware_update_service::RegisterPortalRoutes(server);
 }
@@ -2277,6 +2305,7 @@ void Run()
     InitTranscriptionService();
     InitTranscriptionRetryService();
     wifi_saver_runtime::Init();
+    InitFirmwareUpdateService();
     // Sharing stopped on its own (10 idle minutes): take its card off the screen.
     share_service::SetStoppedHandler(
         [](void*) {

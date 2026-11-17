@@ -99,10 +99,31 @@ export interface UpdateRuntimeStatus {
   error_message?: string;
 }
 
+export type CloudUpdateState =
+  | 'IDLE'
+  | 'CHECKING'
+  | 'UP_TO_DATE'
+  | 'AVAILABLE'
+  | 'DOWNLOADING'
+  | 'RESTARTING'
+  | 'ERROR';
+
+// Updates the device downloads itself from the latest GitHub Release.
+export interface CloudUpdateStatus {
+  enabled?: boolean;
+  state?: CloudUpdateState;
+  busy?: boolean;
+  installed_version?: string;
+  latest_version?: string;
+  progress?: number;
+  message?: string;
+}
+
 export interface UpdateRuntimeResponse {
   success: boolean;
   message?: string;
   runtime?: UpdateRuntimeStatus;
+  cloud?: CloudUpdateStatus;
 }
 
 export interface SleepStatusResponse {

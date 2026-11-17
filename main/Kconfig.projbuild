@@ -96,4 +96,15 @@ menu "Brain Dump Settings"
             archiving ("Never"). Overridden by a runtime NVS setting once
             changed from the Settings page.
 
+    config CHRONINKLE_FIRMWARE_UPDATE_MANIFEST_URL
+        string "Firmware update manifest URL"
+        default "https://github.com/nad1z/-Brain-dump-/releases/latest/download/braindump-manifest.json"
+        help
+            Where the device looks for the latest release when you choose
+            "Check for updates" (Settings > About, or the setup web page).
+            CI attaches braindump-manifest.json to every GitHub Release; the
+            /releases/latest/download/ form always points at the newest
+            non-pre-release. Leave empty to turn updates from the internet off
+            (uploading an update file from the setup web page still works).
+
 endmenu

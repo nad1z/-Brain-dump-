@@ -28,7 +28,8 @@ onboarding, and a set of feature pages plus overlays) built on:
 - ESP32-S3 target configuration.
 - 16 MB flash configuration.
 - 8 MB PSRAM configuration.
-- OTA-ready partition layout with rollback enabled.
+- OTA-ready partition layout with rollback enabled; updates install from an uploaded file or
+  straight from the latest GitHub Release (`firmware_update_service`).
 - A minimal C++ `app_main()`.
 - An `axp2101` component: the PMIC driver that owns the rails, charger, battery
   telemetry, and the power-key interrupt stream.
@@ -810,6 +811,7 @@ On single-core builds, the shared task config maps the app core back to CPU0.
 | `timezone_sync` | `timezone_service` | 2 | CPU0 | SNTP sync, system-time update, and RTC writeback. |
 | `clip_playback` | `recording_session_service` | 2 | CPU1 | Short-lived worker that replays a just-recorded clip. |
 | `transcribe_retry` | `transcription_retry_service` | 2 | CPU1 | One-shot batch retry of offline-queued transcriptions. Runs on its own task rather than `gemini_service`'s shared worker: it blocks waiting on a transcription result that is itself queued onto that same worker, which would otherwise never get a turn to run. |
+| `fw_cloud_update` | `firmware_update_service` | 2 | CPU0 | One-shot cloud update worker: reads the release manifest, or streams the new image into the spare OTA slot with `esp_https_ota`. Exits when done (restarts the device after an install). |
 
 The mapping intentionally keeps long-running SD work below input and audio
 capture. Future tasks should be added to `task_config` first, with a short
@@ -1180,6 +1182,24 @@ or from the card's "Stop sharing" action. The same routes, without the PIN, are 
 the setup hotspot's server through `app_shell`'s portal route registrar. Name/URL/PIN helpers
 are in the pure, host-tested `share_names.cpp`. EPUB conversion is deliberately not here: the
 web page converts EPUB to text in the browser before uploading.
+
+### `components/firmware_update_service`
+
+Over-the-air updates into the spare OTA slot (`partitions.csv`: `ota_0`/`ota_1`), from two
+sources. **Upload**: `POST /api/update` on the setup hotspot's server streams a `.bin` from the
+web page. **Cloud**: `StartCloudCheck()` reads `braindump-manifest.json` from
+`CONFIG_CHRONINKLE_FIRMWARE_UPDATE_MANIFEST_URL` (default: this repo's
+`releases/latest/download/`, published by CI's tag-triggered release job; see
+`docs/versioning.md`), and `StartCloudInstall()` downloads the image it names straight into the
+spare slot. Both refuse an image whose app description is for another project before anything
+is erased; `esp_ota_end`/`esp_https_ota_finish` verify the image hash before switching the boot
+slot, and the bootloader's rollback covers a build that fails to start (`app_shell` marks it
+valid after startup). Only one update runs at a time. The component knows nothing about Wi-Fi,
+battery or UI: `app_shell` supplies the battery precondition (`SetPrecondition`), the "is the
+station connected" check (`SetNetworkCheck`) and a status listener that repaints Settings >
+About. The manifest parser and version ordering are pure and host-tested
+(`release_manifest.cpp`). Device sleep and the Wi-Fi saver both treat a running update as
+work in flight.
 
 ### `components/storage_service`
 

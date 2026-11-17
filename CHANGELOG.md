@@ -8,6 +8,28 @@ via `git log`, not backfilled here.
 
 ## [Unreleased]
 
+### Added (updates from the internet)
+
+- **Check for updates.** Settings > About has a new button that asks
+  GitHub for the latest Brain Dump release and, if it is newer, offers
+  **Install version X.Y.Z**: the device downloads it over its own Wi-Fi
+  connection straight into the spare firmware slot (nothing is saved to a
+  phone, computer or the SD card), verifies it and restarts. The setup web
+  page's Firmware Update card has the same button next to **Install from
+  file** (renamed from Install Update). Refused while offline or on a
+  battery below 30% without USB; a damaged or wrong download leaves the
+  running firmware untouched, and the existing rollback still applies.
+  (`firmware_update_service` cloud worker using `esp_https_ota`;
+  `POST /api/update/cloud/check`, `POST /api/update/cloud/install`, a
+  `cloud` object in `GET /api/runtime/update`; manifest URL in
+  `CONFIG_CHRONINKLE_FIRMWARE_UPDATE_MANIFEST_URL`.)
+- **Releases.** Pushing a `vX.Y.Z` tag now publishes a GitHub Release
+  carrying the update file, the full USB-flash image and
+  `braindump-manifest.json` (version, URL, size, SHA-256), with notes taken
+  from this file. The tag must match `version.txt`; `-rc` style tags are
+  published as pre-releases, which devices ignore.
+- Auto-sleep now waits while a firmware update is downloading or uploading.
+
 ### Added (sound and language)
 
 - **Silent mode** switch on the Settings screen: turns the codec output

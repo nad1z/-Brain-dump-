@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "esp_sleep.h"
 #include "esp_timer.h"
+#include "firmware_update_service.h"
 #include "chroninkle_task_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -160,6 +161,13 @@ device_sleep_service::BlockerReason GetAutoSleepBlocker(void*)
 
     if (wifi_service::IsAccessPointMode()) {
         return device_sleep_service::BlockerReason::kWifiAccessPoint;
+    }
+
+    // A firmware download or upload must not be cut by light sleep: the radio would drop and the
+    // attempt would be wasted.
+    if (firmware_update_service::IsUpdateInProgress() ||
+        firmware_update_service::IsCloudWorkInFlight()) {
+        return device_sleep_service::BlockerReason::kFirmwareUpdate;
     }
 
     if (timezone_service::IsSyncInProgress()) {
